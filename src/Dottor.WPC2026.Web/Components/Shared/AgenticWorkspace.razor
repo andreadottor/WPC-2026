@@ -1,0 +1,238 @@
+@implements IDisposable
+
+<div class="agentic-layout">
+    <section class="card document-preview @(Agent.State.HasPendingPredictiveState ? "pending" : "")" data-testid="document">
+        <div class="card-header d-flex flex-wrap align-items-center gap-2">
+            <span class="fw-semibold">Documento condiviso</span>
+            @if (Agent.State.HasPendingPredictiveState)
+            {
+                <span class="badge text-bg-warning" data-testid="pending-badge">Proposta in attesa di conferma</span>
+            }
+            else if (IsRunning)
+            {
+                <span class="badge text-bg-info">L'agente sta lavorando…</span>
+            }
+            @if (PublishedInfo is not null)
+            {
+                <span class="badge text-bg-success" data-testid="published">@PublishedInfo</span>
+            }
+            <button class="btn btn-sm btn-outline-secondary ms-auto" disabled="@IsRunning" @onclick="ResetAsync">Ripristina demo</button>
+        </div>
+        <div class="card-body">
+            @if (Agent.State.HasPendingPredictiveState)
+            {
+                <div class="diff" data-testid="diff">
+                    <h2 class="h4">@DiffText(baseline.Title, Document.Title)</h2>
+                    <p class="lead fs-6">@DiffText(baseline.Description, Document.Description)</p>
+                    @for (var i = 0; i < Math.Max(Document.Sections.Count, baseline.Sections.Count); i++)
+                    {
+                        var oldSection = i < baseline.Sections.Count ? baseline.Sections[i] : null;
+                        var newSection = i < Document.Sections.Count ? Document.Sections[i] : null;
+                        <h3 class="h6 mt-3">@DiffText(oldSection?.Heading, newSection?.Heading)</h3>
+                        <p class="mb-0">@DiffText(oldSection?.Body, newSection?.Body)</p>
+                    }
+                </div>
+            }
+            else
+            {
+                <fieldset disabled="@IsRunning">
+                    <div class="mb-2">
+                        <label class="form-label small mb-0" for="doc-title">Titolo</label>
+                        <input id="doc-title" class="form-control fw-semibold" @bind="Document.Title" @bind:event="oninput" data-testid="doc-title" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small mb-0" for="doc-description">Descrizione</label>
+                        <textarea id="doc-description" class="form-control" rows="3" @bind="Document.Description" @bind:event="oninput"></textarea>
+                    </div>
+                    @foreach (var section in Document.Sections)
+                    {
+                        <div class="mb-2">
+                            <input class="form-control form-control-sm fw-semibold mb-1" @bind="section.Heading" @bind:event="oninput" aria-label="Titolo sezione" />
+                            <textarea class="form-control form-control-sm" rows="3" @bind="section.Body" @bind:event="oninput" aria-label="Testo sezione"></textarea>
+                        </div>
+                    }
+                </fieldset>
+                <p class="small text-body-secondary mb-0">Puoi modificare il testo: l'agente riceve sempre lo stato aggiornato.</p>
+            }
+        </div>
+    </section>
+
+    <aside class="card agentic-chat">
+        <div class="card-header d-flex align-items-center gap-2">
+            <span class="fw-semibold">Assistente</span>
+            <span class="badge @(Ai.IsSimulated ? "text-bg-secondary" : "text-bg-primary")" data-testid="ai-mode">@Ai.Description</span>
+        </div>
+        <div class="sc-ai-root sc-ai-chat-page">
+            <div class="sc-ai-chat-page__body">
+                <MessageList>
+                    <EmptyContent>
+                        <p class="text-body-secondary small p-3 mb-0">
+                            Chiedi all'agente di modificare il documento, oppure scegli un suggerimento qui sotto.
+                        </p>
+                    </EmptyContent>
+                    <ChildContent>
+                        <BlockRenderer TBlock="UIActionBlock" Context="action"
+                                       When="@(block => block.ToolName == SimulatedDocumentChatClient.ProposeDocumentTool)">
+                            <ProposalCard Block="action" />
+                        </BlockRenderer>
+                        <BlockRenderer TBlock="FunctionApprovalBlock" Context="approval">
+                            <div class="card border-warning my-2" data-testid="approval">
+                                <div class="card-body py-2">
+                                    <div class="small text-uppercase text-warning-emphasis fw-semibold">Approvazione richiesta</div>
+                                    <div class="mb-2">
+                                        L'agente vuole eseguire <code>@approval.ToolName</code>@(approval.Arguments is { Count: > 0 } ? $" con {string.Join(", ", approval.Arguments.Select(a => $"{a.Key} = {a.Value}"))}" : "")
+                                    </div>
+                                    @if (approval.Status == ApprovalStatus.Pending)
+                                    {
+                                        <button class="btn btn-sm btn-success me-1" @onclick="approval.Approve">Approva</button>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="@(() => approval.Reject("L'utente ha rifiutato la pubblicazione."))">Rifiuta</button>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge @(approval.Status == ApprovalStatus.Approved ? "text-bg-success" : "text-bg-danger")">
+                                            @(approval.Status == ApprovalStatus.Approved ? "Approvato" : "Rifiutato")
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        </BlockRenderer>
+                        <BlockRenderer TBlock="DocumentAnalysisBlock" Context="analysis">
+                            <div class="card border-info my-2" data-testid="analysis">
+                                <div class="card-body py-2">
+                                    <div class="small text-uppercase text-info-emphasis fw-semibold">Analisi documento (tool server-side)</div>
+                                    @if (analysis.Analysis is { } result)
+                                    {
+                                        <div class="d-flex gap-3 my-1">
+                                            <span><strong>@result.Words</strong> parole</span>
+                                            <span><strong>@result.Sections</strong> sezioni</span>
+                                            <span>~<strong>@result.ReadingMinutes</strong> min di lettura</span>
+                                        </div>
+                                        <div class="small">@result.Summary</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="small"><span class="spinner-border spinner-border-sm me-1"></span>Analisi in corso…</div>
+                                    }
+                                </div>
+                            </div>
+                        </BlockRenderer>
+                    </ChildContent>
+                </MessageList>
+            </div>
+            @if (AgentContext.Status == ConversationStatus.Error)
+            {
+                <div class="alert alert-danger d-flex align-items-center gap-2 mx-2 mb-2 py-2 small" data-testid="ai-error">
+                    <span class="flex-grow-1">Errore nella chiamata al modello: @AgentContext.Error?.Message</span>
+                    <button class="btn btn-sm btn-outline-danger" @onclick="() => AgentContext.RetryAsync(CancellationToken.None)">Riprova</button>
+                </div>
+            }
+            <div class="d-flex flex-wrap gap-1 px-2 pb-2">
+                @foreach (var suggestion in Suggestions)
+                {
+                    <button class="btn btn-sm btn-outline-primary" disabled="@(IsRunning || Agent.State.HasPendingPredictiveState)"
+                            @onclick="() => SendAsync(suggestion)">@suggestion</button>
+                }
+            </div>
+            <div class="sc-ai-chat-page__footer">
+                <div class="sc-ai-chat-page__input-container">
+                    <MessageInput Placeholder="Descrivi una modifica…" />
+                </div>
+            </div>
+        </div>
+    </aside>
+</div>
+
+@code {
+    private static readonly string[] Suggestions =
+    [
+        "Rendi la descrizione più tecnica",
+        "Aggiungi una sezione sulla sicurezza",
+        "Proponi un titolo alternativo",
+        "Migliora la chiarezza del testo",
+        "Riassumi il documento",
+        "Pubblica il documento"
+    ];
+
+    private IDisposable? stateRegistration;
+    private IDisposable? statusRegistration;
+    private DocumentState baseline = new();
+    private ConversationStatus lastStatus;
+
+    [CascadingParameter]
+    public AgentContext AgentContext { get; set; } = default!;
+
+    [Inject]
+    private ILogger<AgenticWorkspace> Logger { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public UIAgent<DocumentState> Agent { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public AiOptions Ai { get; set; } = default!;
+
+    [Parameter]
+    public string? PublishedInfo { get; set; }
+
+    [Parameter]
+    public EventCallback ResetRequested { get; set; }
+
+    private DocumentState Document => Agent.State.Value;
+
+    private bool IsRunning => AgentContext.Status is ConversationStatus.Streaming or ConversationStatus.AwaitingInput;
+
+    protected override void OnInitialized()
+    {
+        baseline = Document.Clone();
+        lastStatus = AgentContext.Status;
+        stateRegistration = Agent.State.OnChanged(() => _ = InvokeAsync(StateHasChanged));
+        statusRegistration = AgentContext.RegisterOnStatusChanged(status => _ = InvokeAsync(() =>
+        {
+            // Fotografa il documento all'inizio di ogni richiesta: è la base del diff.
+            if (status == ConversationStatus.Streaming && lastStatus is not (ConversationStatus.Streaming or ConversationStatus.AwaitingInput)
+                && !Agent.State.HasPendingPredictiveState)
+            {
+                baseline = Document.Clone();
+            }
+            lastStatus = status;
+            if (status == ConversationStatus.Error)
+            {
+                Logger.LogError(AgentContext.Error, "Demo 6: errore durante il turno dell'agente");
+            }
+            StateHasChanged();
+        }));
+    }
+
+    private Task SendAsync(string prompt) => AgentContext.SendMessageAsync(prompt, CancellationToken.None);
+
+    private Task ResetAsync() => ResetRequested.InvokeAsync();
+
+    private static RenderFragment DiffText(string? oldText, string? newText) => builder =>
+    {
+        var sequence = 0;
+        foreach (var part in TextDiff.Compute(oldText, newText))
+        {
+            switch (part.Kind)
+            {
+                case DiffKind.Added:
+                    builder.OpenElement(sequence++, "ins");
+                    builder.AddContent(sequence++, part.Text);
+                    builder.CloseElement();
+                    break;
+                case DiffKind.Removed:
+                    builder.OpenElement(sequence++, "del");
+                    builder.AddContent(sequence++, part.Text);
+                    builder.CloseElement();
+                    break;
+                default:
+                    builder.AddContent(sequence++, part.Text);
+                    break;
+            }
+        }
+    };
+
+    public void Dispose()
+    {
+        stateRegistration?.Dispose();
+        statusRegistration?.Dispose();
+    }
+}

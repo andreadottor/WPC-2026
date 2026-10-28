@@ -1,0 +1,56 @@
+@page "/demo/quickgrid/{Id:int}"
+@inject TicketService Tickets
+
+<PageTitle>Ticket #@Id</PageTitle>
+
+<a class="btn btn-sm btn-outline-secondary mb-3" href="@BackUrl">← Torna alla lista</a>
+
+@if (ticket is null)
+{
+    <div class="alert alert-warning">Il ticket #@Id non esiste.</div>
+}
+else
+{
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h1 class="h4 mb-0">#@ticket.Id · @ticket.Title</h1>
+            <RenderModeBadge />
+        </div>
+        <div class="card-body">
+            <p>@ticket.Description</p>
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Priorità</dt>
+                <dd class="col-sm-9">@ticket.Priority.ToDisplayName()</dd>
+                <dt class="col-sm-3">Stato</dt>
+                <dd class="col-sm-9">@ticket.Status.ToDisplayName()</dd>
+                <dt class="col-sm-3">Creato il</dt>
+                <dd class="col-sm-9">@ticket.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+                <dt class="col-sm-3">Assegnato a</dt>
+                <dd class="col-sm-9">@ticket.AssignedTo</dd>
+                @if (ticket.ReporterEmail is not null)
+                {
+                    <dt class="col-sm-3">Segnalato da</dt>
+                    <dd class="col-sm-9">@ticket.ReporterEmail</dd>
+                }
+            </dl>
+        </div>
+    </div>
+}
+
+@code {
+    private Ticket? ticket;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    // Accetta solo URL relativi alla griglia, per evitare open redirect.
+    private string BackUrl =>
+        ReturnUrl is not null && ReturnUrl.StartsWith("demo/quickgrid", StringComparison.OrdinalIgnoreCase)
+            ? ReturnUrl
+            : "demo/quickgrid";
+
+    protected override void OnParametersSet() => ticket = Tickets.GetById(Id);
+}

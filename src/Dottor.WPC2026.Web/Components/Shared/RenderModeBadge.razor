@@ -1,0 +1,5 @@
+@* Mostra come sta renderizzando il componente: utile per far vedere SSR statico vs interattivo. *@
+<span class="badge @(RendererInfo.IsInteractive ? "text-bg-success" : "text-bg-secondary")"
+      title="RendererInfo.Name = @RendererInfo.Name, IsInteractive = @RendererInfo.IsInteractive">
+    @(RendererInfo.IsInteractive ? "Interattivo" : "Non interattivo") · @RendererInfo.Name
+</span>

@@ -1,0 +1,171 @@
+@page "/demo/other-features"
+@inject NavigationManager Navigation
+@inject IWebHostEnvironment Environment
+
+<PageTitle>Altre novità di Blazor .NET 11</PageTitle>
+
+<DemoHeader Title="Altre novità di Blazor .NET 11">
+    Piccoli esempi, tutti in static SSR, delle altre funzionalità disponibili nella versione installata.
+</DemoHeader>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header fw-semibold"><code>&lt;DisplayName&gt;</code> e attributo <code>[Display]</code></div>
+            <div class="card-body">
+                <table class="table table-sm mb-2">
+                    <thead>
+                        <tr>
+                            <th><DisplayName For="() => sample.Title" /></th>
+                            <th><DisplayName For="() => sample.Email" /></th>
+                            <th><DisplayName For="() => sample.Priority" /></th>
+                        </tr>
+                    </thead>
+                </table>
+                <pre class="small bg-body-tertiary p-2 mb-0">[Display(Name = "Email di contatto")]
+public string? Email { get; set; }
+
+&lt;DisplayName For="() =&gt; model.Email" /&gt;</pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header fw-semibold"><code>&lt;EnvironmentView&gt;</code></div>
+            <div class="card-body">
+                <p class="mb-2">Ambiente corrente: <strong data-testid="environment">@Environment.EnvironmentName</strong></p>
+                <EnvironmentView Include="Development">
+                    <div class="alert alert-warning py-2 mb-2">Visibile solo in <strong>Development</strong>.</div>
+                </EnvironmentView>
+                <EnvironmentView Exclude="Development">
+                    <div class="alert alert-info py-2 mb-2">Visibile in tutti gli ambienti tranne Development.</div>
+                </EnvironmentView>
+                <pre class="small bg-body-tertiary p-2 mb-0">&lt;EnvironmentView Include="Development"&gt;…&lt;/EnvironmentView&gt;
+&lt;EnvironmentView Exclude="Development"&gt;…&lt;/EnvironmentView&gt;</pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header fw-semibold"><code>WithBrowserOptions</code>: configurare il client dal server</div>
+            <div class="card-body">
+                <p class="small">Opzioni lette con <code>BrowserOptions.GetBrowserOptions(HttpContext)</code> per questa richiesta:</p>
+                <dl class="row small mb-2" data-testid="browser-options">
+                    <dt class="col-7">InteractiveServer.ReconnectionMaxRetries</dt>
+                    <dd class="col-5">@(browserOptions?.InteractiveServer.ReconnectionMaxRetries?.ToString() ?? "default")</dd>
+                    <dt class="col-7">InteractiveServer.ReconnectionRetryInterval</dt>
+                    <dd class="col-5">@(browserOptions?.InteractiveServer.ReconnectionRetryInterval?.ToString() ?? "default")</dd>
+                </dl>
+                <pre class="small bg-body-tertiary p-2 mb-0">app.MapRazorComponents&lt;App&gt;()
+   .WithBrowserOptions(o =&gt;
+   {
+       o.InteractiveServer.ReconnectionMaxRetries = 30;
+       o.InteractiveServer.ReconnectionRetryInterval = TimeSpan.FromSeconds(2);
+   });</pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header fw-semibold">TempData in static SSR</div>
+            <div class="card-body">
+                @if (flash is not null)
+                {
+                    <div class="alert alert-success py-2" data-testid="flash">@flash</div>
+                }
+                <form method="post" @formname="flash" @onsubmit="SetFlash" class="mb-2">
+                    <AntiforgeryToken />
+                    <button class="btn btn-sm btn-primary" type="submit" data-testid="flash-submit">Invia (POST → redirect → GET)</button>
+                </form>
+                <p class="small mb-0">
+                    Il messaggio sopravvive al redirect e viene mostrato <strong>una sola volta</strong>: ricarica la pagina e sparisce.
+                    Esempio completo nella <a href="demo/static-ssr-validation">Demo 3</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header fw-semibold">Configurazione dei circuit</div>
+            <div class="card-body">
+                <ul class="small mb-2">
+                    <li><code>ConfigureConnection</code>: opzioni della connessione SignalR direttamente su <code>AddInteractiveServerRenderMode</code>.</li>
+                    <li>Pausa avviata dal server e ripresa automatica dello stato: vedi la <a href="demo/circuit-pause">Demo 1</a>.</li>
+                </ul>
+                <pre class="small bg-body-tertiary p-2 mb-0">.AddInteractiveServerRenderMode(o =&gt;
+    o.ConfigureConnection = c =&gt; c.AllowStatefulReconnects = true);</pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header fw-semibold">Navigazione relativa e <code>GetUriWithFragment</code></div>
+            <div class="card-body">
+                <p class="small mb-2">
+                    <NavLink href="quickgrid" RelativeToCurrentUri="true">NavLink relativo: "quickgrid"</NavLink>
+                    porta a <code>/demo/quickgrid</code> perché è risolto rispetto alla pagina corrente (<code>/demo/…</code>).
+                </p>
+                <p class="small mb-2">
+                    <a href="@Navigation.GetUriWithFragment("cache")" data-testid="fragment-link">Vai alla sezione #cache</a>
+                    costruisce <code>@Navigation.GetUriWithFragment("cache")</code>.
+                </p>
+                <pre class="small bg-body-tertiary p-2 mb-0">&lt;NavLink href="quickgrid" RelativeToCurrentUri="true"&gt;
+Navigation.GetUriWithFragment("cache")</pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12" id="cache">
+        <div class="card">
+            <div class="card-header fw-semibold"><code>&lt;CacheView&gt;</code>: cache di un sotto-albero in static SSR</div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-4 mb-2">
+                    <div>Fuori dalla cache: <strong data-testid="time-live">@DateTime.Now.ToString("HH:mm:ss.fff")</strong></div>
+                    <CacheView ExpiresAfter="TimeSpan.FromSeconds(30)">
+                        <div>Dentro <code>CacheView</code> (30 s): <strong data-testid="time-cached">@DateTime.Now.ToString("HH:mm:ss.fff")</strong></div>
+                    </CacheView>
+                </div>
+                <p class="small mb-0">Ricarica la pagina: il primo orario cambia, il secondo resta uguale per 30 secondi.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ObserveBox>
+    Tutti gli esempi di questa pagina funzionano in <strong>static SSR</strong>: nessun circuit e nessun WebAssembly.
+</ObserveBox>
+
+@code {
+    private readonly NewTicketModel sample = new();
+    private BrowserOptions? browserOptions;
+    private string? flash;
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    [SupplyParameterFromTempData]
+    public string? FlashMessage { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // Il valore della proprietà viene riscritto in TempData a fine richiesta: lo copiamo e lo azzeriamo.
+        flash = FlashMessage;
+        FlashMessage = null;
+
+        if (HttpContext is not null)
+        {
+            browserOptions = BrowserOptions.GetBrowserOptions(HttpContext);
+        }
+    }
+
+    private void SetFlash()
+    {
+        FlashMessage = $"Messaggio salvato in TempData alle {DateTime.Now:HH:mm:ss}.";
+        Navigation.NavigateTo("demo/other-features");
+    }
+}

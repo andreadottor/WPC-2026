@@ -1,0 +1,226 @@
+@page "/demo/virtualize"
+@rendermode InteractiveServer
+@implements IDisposable
+
+<PageTitle>Demo 4 · Virtualize</PageTitle>
+
+<DemoHeader Number="4" Title="Virtualize con elementi di altezza variabile">
+    10.000 eventi con descrizioni di lunghezza diversa, espandibili e riducibili.
+    In .NET 11 <code>Virtualize</code> misura le altezze reali, offre <code>ScrollToItemAsync</code>,
+    <code>InitialItemIndex</code> e il nuovo <code>AnchorMode</code>.
+</DemoHeader>
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header fw-semibold d-flex flex-wrap gap-2 align-items-center">
+                Timeline eventi
+                <span class="badge text-bg-light border" data-testid="event-count">@events.Count.ToString("N0") eventi</span>
+                <div class="ms-auto d-flex gap-2 align-items-center">
+                    <label class="small" for="anchor">AnchorMode</label>
+                    <select id="anchor" class="form-select form-select-sm w-auto" @bind="anchorMode">
+                        @foreach (var mode in Enum.GetValues<VirtualizeAnchorMode>())
+                        {
+                            <option value="@mode">@mode</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="card-body pb-2">
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <button class="btn btn-sm btn-outline-primary" @onclick="ScrollToStart">⤒ Inizio</button>
+                    <button class="btn btn-sm btn-outline-primary" @onclick="ScrollToEnd">⤓ Fine</button>
+                    <div class="input-group input-group-sm" style="width: 15rem">
+                        <span class="input-group-text">Indice</span>
+                        <input type="number" class="form-control" min="0" max="@(events.Count - 1)" @bind="targetIndex" data-testid="target-index" />
+                        <button class="btn btn-primary" @onclick="ScrollToTarget" data-testid="goto">Vai</button>
+                    </div>
+                    <button class="btn btn-sm btn-outline-success" @onclick="AddAtTop">+ In cima</button>
+                    <button class="btn btn-sm btn-outline-success" @onclick="AddAtBottom">+ In fondo</button>
+                    <button class="btn btn-sm @(liveFeed ? "btn-success" : "btn-outline-success")" @onclick="ToggleLiveFeed">
+                        @(liveFeed ? "■ Ferma flusso" : "▶ Flusso in cima")
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => expanded.Clear()">Riduci tutti</button>
+                </div>
+                <div class="small text-body-secondary mb-2">@anchorDescription</div>
+
+                <div class="virtualize-container" data-testid="timeline">
+                    <Virtualize @ref="timeline" Items="events" Context="item" AnchorMode="anchorMode" ItemSize="90">
+                        <div @key="item.Id" class="timeline-item severity-@item.Severity.ToString().ToLowerInvariant() @(item.Id == highlightedId ? "highlight" : "")"
+                             data-event-id="@item.Id">
+                            <div class="d-flex justify-content-between align-items-center gap-2">
+                                <div>
+                                    <span class="badge text-bg-dark">#@item.Id</span>
+                                    <strong class="ms-1">@item.Title</strong>
+                                    <span class="badge rounded-pill text-bg-light border ms-1">@item.Severity.ToDisplayName()</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <small class="text-body-secondary">@item.Timestamp.ToString("dd/MM HH:mm")</small>
+                                    <button class="btn btn-sm btn-link p-0" @onclick="() => Toggle(item.Id)">
+                                        @(expanded.Contains(item.Id) ? "Riduci" : "Espandi")
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="small mt-1">
+                                @if (expanded.Contains(item.Id))
+                                {
+                                    @item.Description
+                                }
+                                else
+                                {
+                                    @(item.Description.Length > 110 ? item.Description[..110] + "…" : item.Description)
+                                }
+                            </div>
+                        </div>
+                    </Virtualize>
+                </div>
+                @if (status is not null)
+                {
+                    <div class="small mt-2" data-testid="scroll-status">@status</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+        <div class="card">
+            <div class="card-header fw-semibold d-flex align-items-center gap-2">
+                Log in tempo reale
+                <span class="badge text-bg-light border">AnchorMode.End</span>
+                <button class="btn btn-sm ms-auto @(logRunning ? "btn-danger" : "btn-success")" @onclick="ToggleLog">
+                    @(logRunning ? "■ Stop" : "▶ Avvia")
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="log-container" data-testid="log">
+                    <Virtualize Items="logLines" Context="line" AnchorMode="VirtualizeAnchorMode.End" ItemSize="20">
+                        <div @key="line.Id" class="log-line level-@line.Level">@line.Text</div>
+                    </Virtualize>
+                </div>
+                <div class="small text-body-secondary mt-2">
+                    @logLines.Count righe. Resta in fondo come una chat; se scorri verso l'alto la posizione viene mantenuta.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ObserveBox>
+    <ul class="mb-0">
+        <li>Scorri velocemente la timeline: nessun "salto" anche se ogni elemento ha un'altezza diversa.</li>
+        <li>Espandi e riduci eventi mentre scorri: le altezze cambiano e la posizione resta stabile.</li>
+        <li>Usa <em>Vai</em> con indice 5000 o <em>Fine</em>: <code>ScrollToItemAsync</code> porta l'elemento in cima, senza JavaScript custom.</li>
+        <li>Con <code>AnchorMode = Start</code> e lista in cima, il flusso di nuovi eventi resta visibile; con <code>None</code> la vista non si sposta.</li>
+        <li>Il log usa <code>AnchorMode.End</code>: le nuove righe (anche su più linee) restano in vista, come in una chat.</li>
+    </ul>
+</ObserveBox>
+
+@code {
+    private readonly List<TimelineEvent> events = TimelineEventGenerator.Generate(10_000);
+    private readonly HashSet<int> expanded = [];
+    private readonly Random random = new(2026);
+    private Virtualize<TimelineEvent>? timeline;
+    private VirtualizeAnchorMode anchorMode = VirtualizeAnchorMode.Start;
+    private int targetIndex = 5000;
+    private int? highlightedId;
+    private string? status;
+    private bool liveFeed;
+    private Timer? feedTimer;
+
+    private readonly List<LogLine> logLines = [];
+    private bool logRunning;
+    private Timer? logTimer;
+    private int logCounter;
+
+    private string anchorDescription => anchorMode switch
+    {
+        VirtualizeAnchorMode.Start => "Start (default): se la lista è all'inizio, i nuovi elementi in cima restano visibili.",
+        VirtualizeAnchorMode.End => "End: se la lista è in fondo, resta agganciata alla fine quando arrivano nuovi elementi.",
+        _ => "None: la posizione di scorrimento non cambia quando vengono aggiunti elementi."
+    };
+
+    protected override void OnInitialized()
+    {
+        for (var i = 0; i < 40; i++)
+        {
+            AppendLogLine();
+        }
+    }
+
+    private void Toggle(int id)
+    {
+        if (!expanded.Remove(id))
+        {
+            expanded.Add(id);
+        }
+    }
+
+    private Task ScrollToStart() => ScrollToIndexAsync(0);
+
+    private Task ScrollToEnd() => ScrollToIndexAsync(events.Count - 1);
+
+    private Task ScrollToTarget() => ScrollToIndexAsync(Math.Clamp(targetIndex, 0, events.Count - 1));
+
+    private async Task ScrollToIndexAsync(int index)
+    {
+        highlightedId = events[index].Id;
+        status = $"Scorrimento all'indice {index} (evento #{highlightedId})...";
+        StateHasChanged();
+        await timeline!.ScrollToItemAsync(index);
+        status = $"Elemento all'indice {index} (evento #{highlightedId}) allineato in cima.";
+    }
+
+    private void AddAtTop()
+    {
+        events.Insert(0, NewEvent());
+        status = $"Aggiunto l'evento #{events[0].Id} in cima.";
+    }
+
+    private void AddAtBottom()
+    {
+        events.Add(NewEvent());
+        status = $"Aggiunto l'evento #{events[^1].Id} in fondo.";
+    }
+
+    private TimelineEvent NewEvent() =>
+        TimelineEventGenerator.Create(events.Max(e => e.Id) + 1, DateTime.Now, random) with { Title = "Nuovo evento" };
+
+    private void ToggleLiveFeed()
+    {
+        liveFeed = !liveFeed;
+        feedTimer?.Dispose();
+        feedTimer = liveFeed
+            ? new Timer(_ => InvokeAsync(() => { AddAtTop(); StateHasChanged(); }), null, 0, 1000)
+            : null;
+    }
+
+    private void ToggleLog()
+    {
+        logRunning = !logRunning;
+        logTimer?.Dispose();
+        logTimer = logRunning
+            ? new Timer(_ => InvokeAsync(() => { AppendLogLine(); StateHasChanged(); }), null, 0, 400)
+            : null;
+    }
+
+    private void AppendLogLine()
+    {
+        logCounter++;
+        var roll = random.Next(10);
+        var (level, text) = roll switch
+        {
+            0 => ("error", $"ERR  Richiesta {logCounter} fallita: TimeoutException\n     at Orders.Process()\n     at Pipeline.Run()"),
+            1 or 2 => ("warn", $"WARN Richiesta {logCounter} lenta: {random.Next(800, 3000)} ms"),
+            _ => ("info", $"INFO Richiesta {logCounter} completata in {random.Next(5, 200)} ms")
+        };
+        logLines.Add(new LogLine(logCounter, level, $"{DateTime.Now:HH:mm:ss.fff} {text}"));
+    }
+
+    public void Dispose()
+    {
+        feedTimer?.Dispose();
+        logTimer?.Dispose();
+    }
+
+    private sealed record LogLine(int Id, string Level, string Text);
+}
