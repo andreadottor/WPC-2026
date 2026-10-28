@@ -1,0 +1,253 @@
+@page "/demo/async-validation"
+@rendermode InteractiveServer
+@implements IDisposable
+@inject UserService Users
+
+<PageTitle>Demo 2 · Validazione asincrona</PageTitle>
+
+<DemoHeader Number="2" Title="Validazione asincrona nei form">
+    <code>AsyncValidationAttribute</code> porta la validazione asincrona dentro DataAnnotations:
+    il <code>DataAnnotationsValidator</code> la esegue, <code>EditContext</code> ne espone lo stato
+    e il framework annulla i controlli superati.
+</DemoHeader>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header fw-semibold">Registrazione utente</div>
+            <div class="card-body">
+                <EditForm EditContext="editContext" OnValidSubmit="RegisterAsync" FormName="registration">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="fullName">
+                            <DisplayName For="() => model.FullName" /> <span class="badge text-bg-light border">sincrona</span>
+                        </label>
+                        <InputText id="fullName" class="form-control" @bind-Value="model.FullName" />
+                        <ValidationMessage For="() => model.FullName" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="email">
+                            <DisplayName For="() => model.Email" /> <span class="badge text-bg-warning">sincrona + asincrona</span>
+                        </label>
+                        <div class="input-group">
+                            <InputText id="email" class="form-control" @bind-Value="model.Email" placeholder="nome@example.com" />
+                            <span class="input-group-text" style="min-width: 9.5rem" data-testid="email-status">
+                                @if (EmailPending)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                                    <span>Verifica...</span>
+                                }
+                                else if (EmailFaulted)
+                                {
+                                    <span class="text-danger">⚠ Errore</span>
+                                }
+                                else if (EmailAvailable)
+                                {
+                                    <span class="text-success">✓ Disponibile</span>
+                                }
+                                else
+                                {
+                                    <span class="text-body-secondary">—</span>
+                                }
+                            </span>
+                        </div>
+                        <ValidationMessage For="() => model.Email" />
+                        @if (EmailFaulted)
+                        {
+                            <div class="alert alert-danger py-2 mt-2 mb-0 small">
+                                Il controllo asincrono è terminato con un'eccezione (<code>IsValidationFaulted</code>).
+                                Il form resta non inviabile: correggi l'email per riprovare.
+                            </div>
+                        }
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="age">
+                            <DisplayName For="() => model.Age" /> <span class="badge text-bg-light border">sincrona</span>
+                        </label>
+                        <InputNumber id="age" class="form-control" @bind-Value="model.Age" />
+                        <ValidationMessage For="() => model.Age" />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" disabled="@(EmailPending || isSubmitting)">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                        }
+                        Registrati
+                    </button>
+                    @if (EmailPending)
+                    {
+                        <small class="ms-2 text-body-secondary">In attesa della verifica dell'email...</small>
+                    }
+                </EditForm>
+
+                @if (registeredMessage is not null)
+                {
+                    <div class="alert alert-success mt-3 mb-0" role="status" data-testid="success">@registeredMessage</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card mb-4">
+            <div class="card-header fw-semibold">Stato dell'EditContext</div>
+            <div class="card-body">
+                <dl class="row mb-0 diagnostics">
+                    <dt class="col-7">IsValidationPending()</dt>
+                    <dd class="col-5">@editContext.IsValidationPending()</dd>
+                    <dt class="col-7">IsValidationPending(Email)</dt>
+                    <dd class="col-5">@EmailPending</dd>
+                    <dt class="col-7">IsValidationFaulted(Email)</dt>
+                    <dd class="col-5">@EmailFaulted</dd>
+                    <dt class="col-7">Messaggi di errore</dt>
+                    <dd class="col-5">@editContext.GetValidationMessages().Count()</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header fw-semibold">Registro della validazione</div>
+            <ul class="list-group list-group-flush small" style="max-height: 260px; overflow-y: auto" data-testid="validation-log">
+                @if (log.Count == 0)
+                {
+                    <li class="list-group-item text-body-secondary">Modifica un campo per vedere gli eventi.</li>
+                }
+                @foreach (var entry in log)
+                {
+                    <li class="list-group-item"><span class="text-body-secondary">@entry.Time.ToString("HH:mm:ss.fff")</span> @entry.Text</li>
+                }
+            </ul>
+        </div>
+
+        <div class="card">
+            <div class="card-header fw-semibold">Email già registrate</div>
+            <ul class="list-group list-group-flush small">
+                @foreach (var email in Users.RegisteredEmails)
+                {
+                    <li class="list-group-item font-monospace">@email</li>
+                }
+                <li class="list-group-item text-body-secondary">
+                    Un indirizzo che inizia con <code>errore@@</code> simula un guasto del servizio.
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<ObserveBox>
+    <ol class="mb-2">
+        <li>Lascia vuoto il nome o metti un'età di 15: l'errore compare <strong>subito</strong> (regola sincrona).</li>
+        <li>Scrivi <code>mario.rossi@example.com</code> ed esci dal campo: parte lo spinner per ~800 ms, poi l'errore "già registrato".</li>
+        <li>Modifica di nuovo l'email prima che finisca: il controllo precedente viene <strong>annullato</strong> (vedi registro e log del server).</li>
+        <li>Correggi in <code>nuovo@example.com</code>: compare "Disponibile" e il pulsante si riabilita.</li>
+        <li>Prova <code>errore@example.com</code> per vedere lo stato <em>faulted</em>.</li>
+    </ol>
+    <p class="small text-body-secondary mb-0">
+        Per regole che coinvolgono più proprietà si può implementare <code>IAsyncValidatableObject</code> sul modello:
+        il <code>DataAnnotationsValidator</code> la esegue al submit, senza infrastruttura aggiuntiva.
+    </p>
+</ObserveBox>
+
+@code {
+    private RegistrationModel model = new();
+    private EditContext editContext = default!;
+    private readonly List<(DateTime Time, string Text)> log = [];
+    private bool isSubmitting;
+    private string? registeredMessage;
+    private bool wasEmailPending;
+
+    private bool EmailPending => editContext.IsValidationPending(() => model.Email);
+    private bool EmailFaulted => editContext.IsValidationFaulted(() => model.Email);
+    private bool EmailAvailable =>
+        !string.IsNullOrWhiteSpace(model.Email)
+        && editContext.IsModified(() => model.Email)
+        && !editContext.GetValidationMessages(() => model.Email).Any();
+
+    protected override void OnInitialized() => CreateEditContext();
+
+    private void CreateEditContext()
+    {
+        if (editContext is not null)
+        {
+            editContext.OnFieldChanged -= OnFieldChanged;
+            editContext.OnValidationStateChanged -= OnValidationStateChanged;
+        }
+
+        model = new RegistrationModel();
+        editContext = new EditContext(model);
+        editContext.OnFieldChanged += OnFieldChanged;
+        editContext.OnValidationStateChanged += OnValidationStateChanged;
+        wasEmailPending = false;
+    }
+
+    private void OnFieldChanged(object? sender, FieldChangedEventArgs e)
+    {
+        registeredMessage = null;
+        if (e.FieldIdentifier.FieldName == nameof(RegistrationModel.Email))
+        {
+            if (wasEmailPending)
+            {
+                AddLog("Email modificata durante la verifica: il controllo precedente viene annullato");
+            }
+            AddLog($"Email = \"{model.Email}\": regole sincrone valutate, controllo asincrono avviato");
+        }
+        else
+        {
+            // Il DataAnnotationsValidator gestisce lo stesso evento dopo di noi: leggiamo i messaggi subito dopo.
+            var field = e.FieldIdentifier;
+            _ = InvokeAsync(async () =>
+            {
+                await Task.Yield();
+                var messages = editContext.GetValidationMessages(field).ToList();
+                AddLog($"{field.FieldName}: regole sincrone valutate subito → {(messages.Count == 0 ? "valido" : messages[0])}");
+                StateHasChanged();
+            });
+        }
+    }
+
+    // Lo stato asincrono cambia fuori dal ciclo dell'evento UI: serve un nuovo render.
+    private void OnValidationStateChanged(object? sender, ValidationStateChangedEventArgs e)
+    {
+        var pending = EmailPending;
+        if (wasEmailPending && !pending)
+        {
+            var message = editContext.GetValidationMessages(editContext.Field(nameof(RegistrationModel.Email))).FirstOrDefault();
+            AddLog(EmailFaulted
+                ? "Verifica email terminata con errore (faulted)"
+                : $"Verifica email completata → {message ?? "disponibile"}");
+        }
+        wasEmailPending = pending;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RegisterAsync()
+    {
+        isSubmitting = true;
+        await Users.RegisterAsync(model.Email!, model.FullName!);
+        registeredMessage = $"Registrazione completata per {model.FullName} ({model.Email}). Ora l'indirizzo risulta già registrato.";
+        AddLog($"Submit valido: {model.Email} registrata");
+        isSubmitting = false;
+        var message = registeredMessage;
+        CreateEditContext();
+        registeredMessage = message;
+    }
+
+    private void AddLog(string text)
+    {
+        log.Insert(0, (DateTime.Now, text));
+        if (log.Count > 30)
+        {
+            log.RemoveAt(log.Count - 1);
+        }
+    }
+
+    public void Dispose()
+    {
+        editContext.OnFieldChanged -= OnFieldChanged;
+        editContext.OnValidationStateChanged -= OnValidationStateChanged;
+    }
+}

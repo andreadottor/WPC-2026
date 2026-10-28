@@ -1,0 +1,30 @@
+<script type="module" src="@Assets["Components/Layout/NavMenu.razor.js"]"></script>
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">Blazor .NET 11 · WPC 2026</a>
+    </div>
+</div>
+
+<nav-menu>
+    <input type="checkbox" title="Menu di navigazione" class="navbar-toggler" />
+
+    <div class="nav-scrollable">
+        <nav class="nav flex-column">
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <span class="demo-nav-number">⌂</span> Home
+                </NavLink>
+            </div>
+
+            @foreach (var demo in DemoCatalog.All)
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="@demo.Url">
+                        <span class="demo-nav-number">@(demo.Number?.ToString() ?? "+")</span> @demo.Title
+                    </NavLink>
+                </div>
+            }
+        </nav>
+    </div>
+</nav-menu>

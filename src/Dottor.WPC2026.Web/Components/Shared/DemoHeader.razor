@@ -1,0 +1,17 @@
+<div class="demo-header mb-4">
+    <div class="d-flex align-items-center gap-2 mb-1">
+        @if (Number is not null)
+        {
+            <span class="badge text-bg-primary">Demo @Number</span>
+        }
+        <RenderModeBadge />
+    </div>
+    <h1 class="h2 mb-2">@Title</h1>
+    <p class="lead mb-0">@ChildContent</p>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter] public int? Number { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

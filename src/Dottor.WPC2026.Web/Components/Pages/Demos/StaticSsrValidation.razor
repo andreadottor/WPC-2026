@@ -1,0 +1,145 @@
+@page "/demo/static-ssr-validation"
+@inject TicketService Tickets
+@inject NavigationManager Navigation
+
+@* Nessun @rendermode: la pagina è renderizzata in Static SSR, senza circuito e senza WebAssembly. *@
+
+<PageTitle>Demo 3 · Validazione client in Static SSR</PageTitle>
+
+<DemoHeader Number="3" Title="Validazione client-side in Static SSR">
+    Il server rende i metadati delle regole DataAnnotations e lo script di Blazor li applica nel browser:
+    errori immediati senza circuito, senza WebAssembly e senza JavaScript scritto a mano.
+</DemoHeader>
+
+@if (flashMessage is not null)
+{
+    <div class="alert alert-success" role="status" data-testid="flash">
+        @flashMessage
+        @if (flashTicketId is int id)
+        {
+            <a class="alert-link ms-1" href="demo/quickgrid/@id">Apri il dettaglio</a>
+        }
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header fw-semibold">Nuovo ticket</div>
+            <div class="card-body">
+                <EditForm Model="Input" FormName="new-ticket" OnValidSubmit="CreateTicket" method="post">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="alert alert-danger py-2" />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="title"><DisplayName For="() => Input!.Title" /></label>
+                        <InputText id="title" class="form-control" @bind-Value="Input!.Title" />
+                        <ValidationMessage For="() => Input!.Title" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="description"><DisplayName For="() => Input!.Description" /></label>
+                        <InputTextArea id="description" class="form-control" rows="3" @bind-Value="Input!.Description" />
+                        <ValidationMessage For="() => Input!.Description" />
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-7 mb-3">
+                            <label class="form-label" for="email"><DisplayName For="() => Input!.Email" /></label>
+                            <InputText id="email" type="email" class="form-control" @bind-Value="Input!.Email" />
+                            <ValidationMessage For="() => Input!.Email" />
+                        </div>
+                        <div class="col-md-5 mb-3">
+                            <label class="form-label" for="priority"><DisplayName For="() => Input!.Priority" /></label>
+                            <InputSelect id="priority" class="form-select" @bind-Value="Input!.Priority">
+                                <option value="">-- Seleziona --</option>
+                                @foreach (var priority in Enum.GetValues<TicketPriority>())
+                                {
+                                    <option value="@priority">@priority.ToDisplayName()</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="() => Input!.Priority" />
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Invia ticket</button>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header fw-semibold">Diagnostica</div>
+            <div class="card-body">
+                <dl class="row mb-0 diagnostics">
+                    <dt class="col-6">RendererInfo.Name</dt>
+                    <dd class="col-6">@RendererInfo.Name</dd>
+                    <dt class="col-6">IsInteractive</dt>
+                    <dd class="col-6">@RendererInfo.IsInteractive</dd>
+                    <dt class="col-6">Metodo HTTP</dt>
+                    <dd class="col-6">@HttpContext?.Request.Method</dd>
+                    <dt class="col-6">POST ricevuti dal server</dt>
+                    <dd class="col-6" data-testid="post-count">@postCount</dd>
+                    <dt class="col-6">Ticket totali</dt>
+                    <dd class="col-6">@Tickets.GetAll().Count()</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ObserveBox>
+    <ol class="mb-2">
+        <li>Apri gli strumenti di sviluppo, scheda <strong>Network</strong>.</li>
+        <li>Premi <em>Invia ticket</em> con i campi vuoti: gli errori compaiono subito e <strong>nessuna richiesta</strong> parte verso il server (il contatore dei POST non cambia).</li>
+        <li>Correggi i campi: i messaggi spariscono mentre scrivi.</li>
+        <li>Invia il form valido: un solo POST, il server rivalida, crea il ticket e fa redirect (Post-Redirect-Get) con un messaggio in <code>TempData</code>.</li>
+    </ol>
+    <p class="small text-body-secondary mb-0">
+        La validazione lato server resta la fonte di verità: con JavaScript disabilitato il form funziona comunque.
+        Sono supportati gli attributi DataAnnotations standard (Required, StringLength, MinLength, EmailAddress, Range, ecc.).
+    </p>
+</ObserveBox>
+
+@code {
+    private static int postCount;
+    private string? flashMessage;
+    private int? flashTicketId;
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    [SupplyParameterFromForm]
+    public NewTicketModel? Input { get; set; }
+
+    // Novità .NET 11: TempData in Static SSR, ideale per i messaggi dopo un redirect.
+    [SupplyParameterFromTempData]
+    public string? Message { get; set; }
+
+    [SupplyParameterFromTempData]
+    public int? CreatedTicketId { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Input ??= new NewTicketModel();
+
+        // Il valore della proprietà viene riscritto in TempData a fine richiesta:
+        // lo copiamo e lo azzeriamo, così il messaggio compare una sola volta.
+        (flashMessage, flashTicketId) = (Message, CreatedTicketId);
+        (Message, CreatedTicketId) = (null, null);
+
+        if (HttpMethods.IsPost(HttpContext?.Request.Method ?? ""))
+        {
+            Interlocked.Increment(ref postCount);
+        }
+    }
+
+    private void CreateTicket()
+    {
+        var ticket = Tickets.Create(Input!);
+        Message = $"Ticket #{ticket.Id} \"{ticket.Title}\" creato con priorità {ticket.Priority.ToDisplayName()}.";
+        CreatedTicketId = ticket.Id;
+        Navigation.NavigateTo("demo/static-ssr-validation");
+    }
+}

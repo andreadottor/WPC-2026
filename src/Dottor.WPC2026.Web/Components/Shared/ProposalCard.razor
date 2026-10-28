@@ -1,0 +1,57 @@
+@* Conferma/rifiuto della UI action "propose_document": la risposta torna all'agente come risultato del tool. *@
+<div class="card border-primary my-2" data-testid="proposal">
+    <div class="card-body py-2">
+        <div class="small text-uppercase text-primary-emphasis fw-semibold">Modifica proposta</div>
+        @if (Block.IsComplete || answered)
+        {
+            <span class="badge @(accepted ? "text-bg-success" : "text-bg-secondary")" data-testid="proposal-outcome">
+                @(accepted ? "Accettata" : "Rifiutata")
+            </span>
+        }
+        else
+        {
+            <p class="mb-2">Applicare al documento le modifiche evidenziate?</p>
+            <button class="btn btn-sm btn-success me-1" disabled="@busy" @onclick="() => RespondAsync(true)" data-testid="accept">Accetta</button>
+            <button class="btn btn-sm btn-outline-danger" disabled="@busy" @onclick="() => RespondAsync(false)" data-testid="reject">Rifiuta</button>
+        }
+    </div>
+</div>
+
+@code {
+    private bool busy;
+    private bool answered;
+    private bool accepted;
+
+    [Parameter, EditorRequired]
+    public UIActionBlock Block { get; set; } = default!;
+
+    protected override void OnParametersSet()
+    {
+        if (Block.IsComplete && Block.Result?.Result is { } result)
+        {
+            accepted = result.ToString()?.Contains("ACCEPTED", StringComparison.Ordinal) == true;
+        }
+    }
+
+    private async Task RespondAsync(bool accept)
+    {
+        if (busy || answered)
+        {
+            return;
+        }
+
+        busy = true;
+        try
+        {
+            Block.Call.Arguments ??= new Dictionary<string, object?>();
+            Block.Call.Arguments["accepted"] = accept;
+            accepted = accept;
+            answered = true;
+            await Block.InvokeAsync(CancellationToken.None);
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

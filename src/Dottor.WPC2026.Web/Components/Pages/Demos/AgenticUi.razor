@@ -1,0 +1,136 @@
+@page "/demo/agentic-ui"
+@rendermode InteractiveServer
+@using System.ComponentModel
+@using System.Text.Json
+@implements IDisposable
+@inject IChatClient ChatClient
+@inject AiOptions Ai
+@inject ILoggerFactory LoggerFactory
+
+<PageTitle>Demo 6 · Agentic UI</PageTitle>
+
+<DemoHeader Number="6" Title="Agentic UI: l'agente propone, l'utente decide">
+    Con <code>Microsoft.AspNetCore.Components.AI</code> l'agente condivide lo stato con la UI (<code>UIAgent&lt;DocumentState&gt;</code>),
+    propone modifiche come <em>stato predittivo</em>, chiama tool server-side e chiede approvazione prima delle azioni sensibili.
+</DemoHeader>
+
+<AgentBoundary @key="agent" Agent="agent">
+    <AgenticWorkspace Agent="agent" Ai="Ai" PublishedInfo="@publishedInfo" ResetRequested="Reset" />
+</AgentBoundary>
+
+<ObserveBox>
+    <ul class="mb-0">
+        <li><strong>Stato condiviso</strong>: modifica il documento a sinistra e poi chiedi all'agente di migliorarlo: lavora sulla versione aggiornata.</li>
+        <li><strong>Stato predittivo</strong>: la proposta compare subito nel documento con le differenze evidenziate; nulla è definitivo finché non confermi.</li>
+        <li><strong>UI action</strong>: la conferma o il rifiuto vengono restituiti all'agente come risultato di <code>propose_document</code>.</li>
+        <li><strong>Tool server-side</strong>: "Riassumi il documento" esegue <code>analyze_document</code> e il risultato è mostrato con un blocco tipizzato.</li>
+        <li><strong>Human in the loop</strong>: "Pubblica il documento" usa <code>ApprovalRequiredAIFunction</code>: senza la tua approvazione non succede nulla.</li>
+    </ul>
+</ObserveBox>
+
+@code {
+    private UIAgent<DocumentState> agent = default!;
+    private IChatClient documentClient = default!;
+    private string? publishedInfo;
+
+    protected override void OnInitialized()
+    {
+        documentClient = new DocumentContextChatClient(ChatClient, () => agent.State.Value);
+        agent = CreateAgent();
+    }
+
+    private UIAgent<DocumentState> CreateAgent() => new(documentClient, options =>
+    {
+        options.ChatOptions = new ChatOptions
+        {
+            Instructions =
+                "Sei un assistente che aiuta a scrivere un documento di progetto in italiano. " +
+                "Il documento corrente è fornito in JSON in un messaggio di sistema. " +
+                "Per QUALSIASI modifica al documento chiama sempre il tool propose_document passando il documento COMPLETO aggiornato " +
+                "(titolo, descrizione e tutte le sezioni): l'utente vedrà l'anteprima e deciderà se accettarla. Non riscrivere il documento nel testo della risposta. " +
+                "Per riassunti o statistiche chiama analyze_document. Per pubblicare chiama publish_document. " +
+                "Rispondi in italiano con frasi brevi.",
+            Tools =
+            [
+                AIFunctionFactory.Create(AnalyzeDocument, SimulatedDocumentChatClient.AnalyzeDocumentTool,
+                    "Analizza il documento corrente (parole, sezioni, tempo di lettura) senza modificarlo."),
+                new ApprovalRequiredAIFunction(AIFunctionFactory.Create(PublishDocument, SimulatedDocumentChatClient.PublishDocumentTool,
+                    "Pubblica il documento corrente. Richiede l'approvazione dell'utente."))
+            ]
+        };
+
+        // Una chiamata a propose_document diventa stato "predittivo": visibile subito, confermato solo dall'utente.
+        options.StateMapper = context =>
+        {
+            var proposal = context.Update.Contents.OfType<FunctionCallContent>()
+                .FirstOrDefault(call => call.Name == SimulatedDocumentChatClient.ProposeDocumentTool);
+            if (proposal?.Arguments?.TryGetValue("document", out var value) == true && ReadDocument(value) is { } document)
+            {
+                context.SetPredictiveState(document);
+            }
+        };
+
+        options.RegisterUIAction(AIFunctionFactory.Create(ReviewProposal, SimulatedDocumentChatClient.ProposeDocumentTool,
+            "Propone all'utente una nuova versione completa del documento, che può accettarla o rifiutarla."));
+
+        options.AddGeneratedToolBlocks();
+    }, LoggerFactory, DocumentState.CreateSample());
+
+    private string ReviewProposal([Description("Documento completo aggiornato")] DocumentState document, bool? accepted = null)
+    {
+        var isAccepted = accepted ?? throw new InvalidOperationException("La proposta non è ancora stata valutata dall'utente.");
+        if (!agent.State.HasPendingPredictiveState)
+        {
+            throw new InvalidOperationException("La proposta non è più in attesa.");
+        }
+
+        if (isAccepted)
+        {
+            agent.State.AcceptPredictiveState();
+            return "ACCEPTED: l'utente ha accettato la proposta, ora il documento è aggiornato. Conferma brevemente.";
+        }
+
+        agent.State.RejectPredictiveState();
+        return "REJECTED: l'utente ha rifiutato la proposta, il documento è invariato. Conferma brevemente senza proporre altro.";
+    }
+
+    private DocumentAnalysis AnalyzeDocument()
+    {
+        var document = agent.State.Value;
+        var text = string.Join(' ', [document.Title, document.Description, .. document.Sections.SelectMany(s => new[] { s.Heading, s.Body })]);
+        var words = text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
+        return new DocumentAnalysis
+        {
+            Words = words,
+            Sections = document.Sections.Count,
+            ReadingMinutes = Math.Max(1, (int)Math.Ceiling(words / 200.0)),
+            Summary = $"\"{document.Title}\": {document.Description} Sezioni: {string.Join(", ", document.Sections.Select(s => s.Heading))}."
+        };
+    }
+
+    private string PublishDocument([Description("Numero di versione da pubblicare, es. 1.0")] string version)
+    {
+        publishedInfo = $"Versione {version} pubblicata alle {DateTime.Now:HH:mm:ss}";
+        _ = InvokeAsync(StateHasChanged);
+        return publishedInfo + ".";
+    }
+
+    private static DocumentState? ReadDocument(object? value) => value switch
+    {
+        DocumentState document => document,
+        JsonElement { ValueKind: JsonValueKind.Object } json => json.Deserialize<DocumentState>(JsonSerializerOptions.Web),
+        JsonElement { ValueKind: JsonValueKind.String } json => JsonSerializer.Deserialize<DocumentState>(json.GetString()!, JsonSerializerOptions.Web),
+        string text => JsonSerializer.Deserialize<DocumentState>(text, JsonSerializerOptions.Web),
+        _ => null
+    };
+
+    private void Reset()
+    {
+        var previous = agent;
+        publishedInfo = null;
+        agent = CreateAgent();
+        previous.Dispose();
+    }
+
+    public void Dispose() => agent?.Dispose();
+}

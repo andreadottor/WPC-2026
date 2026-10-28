@@ -1,0 +1,89 @@
+@page "/demo/quickgrid"
+@rendermode InteractiveServer
+@implements IDisposable
+@inject TicketService Tickets
+@inject NavigationManager Navigation
+
+<PageTitle>Demo 5 · QuickGrid</PageTitle>
+
+<DemoHeader Number="5" Title="QuickGrid con stato nell'URL">
+    In .NET 11 pagina e ordinamento di <code>QuickGrid</code> vivono nella query string: link condivisibili,
+    tasti Indietro/Avanti funzionanti e <code>OnRowClick</code> per aprire il dettaglio. Nessun codice di sincronizzazione.
+</DemoHeader>
+
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <label class="form-label small mb-1" for="current-url">URL corrente (copiala e aprila in un'altra scheda)</label>
+        <div class="input-group input-group-sm">
+            <input id="current-url" class="form-control font-monospace" readonly value="@currentUrl" data-testid="current-url" />
+            <a class="btn btn-outline-primary" href="@currentUrl" target="_blank">Apri in una nuova scheda ↗</a>
+        </div>
+    </div>
+</div>
+
+<div class="quickgrid-container table-responsive" data-testid="grid">
+    <QuickGrid Items="tickets" Pagination="pagination" OnRowClick="@((Ticket t) => OpenTicket(t))" Class="table table-sm mb-0">
+        <PropertyColumn Property="t => t.Id" Title="N." Sortable="true" Align="Align.End" />
+        <PropertyColumn Property="t => t.Title" Title="Titolo" Sortable="true" />
+        <TemplateColumn Title="Priorità" SortBy="sortByPriority">
+            <span class="badge @PriorityClass(context.Priority)">@context.Priority.ToDisplayName()</span>
+        </TemplateColumn>
+        <TemplateColumn Title="Stato" SortBy="sortByStatus">
+            @context.Status.ToDisplayName()
+        </TemplateColumn>
+        <PropertyColumn Property="t => t.CreatedAt" Title="Creato il" Format="dd/MM/yyyy HH:mm" Sortable="true"
+                        IsDefaultSortColumn="true" InitialSortDirection="SortDirection.Descending" />
+        <PropertyColumn Property="t => t.AssignedTo" Title="Assegnato a" Sortable="true" />
+    </QuickGrid>
+</div>
+<Paginator State="pagination" />
+
+<ObserveBox>
+    <ol class="mb-2">
+        <li>Vai alla pagina 3 e ordina per <em>Priorità</em>: la URL diventa <code>?page=…&amp;sort=Priorità&amp;direction=…</code>.</li>
+        <li>Usa i pulsanti Indietro/Avanti del browser: la griglia segue la URL.</li>
+        <li>Apri la URL in un'altra scheda: stessa pagina, stesso ordinamento.</li>
+        <li>Clicca una riga: <code>OnRowClick</code> apre il dettaglio; il link di ritorno riporta alla stessa vista.</li>
+    </ol>
+    <p class="small text-body-secondary mb-0">
+        Il parametro <code>sort</code> usa il <code>Title</code> della colonna: rinominarlo rompe i link salvati.
+        Con più griglie nella stessa pagina usare <code>QueryParameterNameOptions</code> con un prefisso diverso.
+    </p>
+</ObserveBox>
+
+@code {
+    private IQueryable<Ticket> tickets = default!;
+    private readonly PaginationState pagination = new() { ItemsPerPage = 15 };
+    private readonly GridSort<Ticket> sortByPriority = GridSort<Ticket>.ByAscending(t => t.Priority);
+    private readonly GridSort<Ticket> sortByStatus = GridSort<Ticket>.ByAscending(t => t.Status);
+    private string currentUrl = "";
+
+    protected override void OnInitialized()
+    {
+        tickets = Tickets.GetAll();
+        currentUrl = Navigation.Uri;
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = e.Location;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OpenTicket(Ticket ticket)
+    {
+        var returnUrl = Navigation.ToBaseRelativePath(Navigation.Uri);
+        Navigation.NavigateTo($"demo/quickgrid/{ticket.Id}?returnUrl={Uri.EscapeDataString(returnUrl)}");
+    }
+
+    private static string PriorityClass(TicketPriority priority) => priority switch
+    {
+        TicketPriority.Critical => "text-bg-danger",
+        TicketPriority.High => "text-bg-warning",
+        TicketPriority.Medium => "text-bg-info",
+        _ => "text-bg-light border"
+    };
+
+    public void Dispose() => Navigation.LocationChanged -= OnLocationChanged;
+}
