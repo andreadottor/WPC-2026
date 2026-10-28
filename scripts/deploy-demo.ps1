@@ -7,7 +7,7 @@
     2. Richiede uno shutdown controllato (POST /demo/shutdown): il server mette in pausa i circuit.
     3. Attende la terminazione del processo.
     4. Incrementa la versione applicativa (DEMO_VERSION, es. v1 -> v2).
-    5. Riavvia l'applicazione sulla stessa porta.
+    5. Riavvia l'applicazione sugli stessi endpoint del profilo (https + http).
     6. Attende che il server sia nuovamente disponibile.
 
     Prerequisito: l'app deve essere avviata con lo stesso profilo, ad esempio
@@ -17,99 +17,160 @@
     .\scripts\deploy-demo.ps1
 
 .EXAMPLE
-    .\scripts\deploy-demo.ps1 -LaunchProfile http -NewVersion v3
+    .\scripts\deploy-demo.ps1 -LaunchProfile http -Version v3
 #>
 [CmdletBinding()]
 param(
-    # Profilo di launchSettings.json usato per riavviare l'app: "https" (https://localhost:7255) o "http" (http://localhost:5050).
-    [ValidateSet('https', 'http')]
+    # Profilo di launchSettings.json da cui leggere URL e variabili d'ambiente.
     [string]$LaunchProfile = 'https',
 
+    # URL espliciti (separati da ';'). Se omessi si usa applicationUrl del profilo.
+    [string]$Urls,
+
     # Versione da impostare dopo il riavvio. Se omessa viene incrementata quella corrente (v1 -> v2).
-    [string]$NewVersion,
+    [string]$Version,
 
-    # Se specificato, la nuova istanza parte in background e scrive l'output in questo file invece di aprire una nuova finestra.
-    [string]$LogFile,
+    [ValidateSet('Debug', 'Release')]
+    [string]$Configuration = 'Debug',
 
-    [int]$ShutdownTimeoutSeconds = 60,
-    [int]$StartupTimeoutSeconds = 90
+    [ValidateRange(10, 300)]
+    [int]$TimeoutSeconds = 90
 )
 
 $ErrorActionPreference = 'Stop'
 
-$repoRoot = Split-Path -Parent $PSScriptRoot
-$projectPath = Join-Path $repoRoot 'src\Dottor.WPC2026.Web\Dottor.WPC2026.Web.csproj'
-$baseUrl = if ($LaunchProfile -eq 'https') { 'https://localhost:7255' } else { 'http://localhost:5050' }
+$repository = Split-Path $PSScriptRoot -Parent
+$project = Join-Path $repository 'src\Dottor.WPC2026.Web'
+$assembly = Join-Path $project "bin\$Configuration\net11.0\Dottor.WPC2026.Web.dll"
+$environment = @{ ASPNETCORE_ENVIRONMENT = 'Development' }
+
+if (-not $Urls) {
+    $settings = Get-Content (Join-Path $project 'Properties\launchSettings.json') -Raw | ConvertFrom-Json
+    $profileSettings = $settings.profiles.$LaunchProfile
+    if (-not $profileSettings.applicationUrl) {
+        throw "Profilo '$LaunchProfile' senza applicationUrl in launchSettings.json."
+    }
+    $Urls = $profileSettings.applicationUrl
+    if ($profileSettings.environmentVariables) {
+        foreach ($property in $profileSettings.environmentVariables.PSObject.Properties) {
+            $environment[$property.Name] = $property.Value
+        }
+    }
+}
+
+# La nuova istanza deve ascoltare sugli stessi URL: ogni tab può riprendere il circuit solo sulla propria origin.
+$applicationUrls = @($Urls -split ';' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+$parsedUrls = @($applicationUrls | ForEach-Object { [Uri]$_ })
+# L'app usa sempre UseHttpsRedirection: se disponibile si preferisce l'endpoint https per evitare redirect.
+$controlUrl = ($parsedUrls | Where-Object { $_.Scheme -eq 'https' } | Select-Object -First 1)
+if (-not $controlUrl) { $controlUrl = $parsedUrls | Select-Object -First 1 }
+if (-not $controlUrl) {
+    throw 'Nessun URL valido: impossibile eseguire health check e shutdown.'
+}
+$baseUrl = "$($controlUrl.Scheme)://localhost:$($controlUrl.Port)"
+
+if (-not (Test-Path -LiteralPath $assembly)) {
+    throw "Assembly non trovato: $assembly. Compilare prima con dotnet build -c $Configuration."
+}
 
 function Write-Step([string]$message) {
     Write-Host "==> $message" -ForegroundColor Cyan
 }
 
-function Get-Health {
-    try {
-        return Invoke-RestMethod -Uri "$baseUrl/health" -TimeoutSec 3
-    }
-    catch {
-        return $null
-    }
-}
-
 # 1. L'applicazione è in esecuzione?
 Write-Step "Verifica dell'applicazione su $baseUrl"
-$current = Get-Health
-if (-not $current) {
-    throw "L'applicazione non risponde su $baseUrl/health. Avviala con: dotnet run --project src\Dottor.WPC2026.Web --launch-profile $LaunchProfile"
+try {
+    $previous = Invoke-RestMethod "$baseUrl/health" -TimeoutSec 5
 }
-Write-Host "    Versione $($current.version), PID $($current.processId), circuit connessi: $($current.connectedCircuits)"
+catch {
+    throw "L'applicazione non risponde su $baseUrl. Avviala con: dotnet run --project src\Dottor.WPC2026.Web --launch-profile $LaunchProfile. Dettaglio: $($_.Exception.Message)"
+}
+if ($previous.status -ne 'ok' -or -not $previous.processId) {
+    throw 'Health endpoint inatteso: deployment annullato.'
+}
+$previousProcess = Get-Process -Id $previous.processId -ErrorAction Stop
+if ($previousProcess.ProcessName -notin @('dotnet', 'Dottor.WPC2026.Web')) {
+    throw "Il PID $($previous.processId) non appartiene a un processo .NET atteso."
+}
+Write-Host "    Versione $($previous.version), PID $($previous.processId), circuit connessi: $($previous.connectedCircuits)"
 
-if (-not $NewVersion) {
-    $NewVersion = if ($current.version -match '^v(\d+)$') { "v$([int]$Matches[1] + 1)" } else { 'v2' }
+if (-not $Version) {
+    if ($previous.version -match '^v(\d+)$') {
+        $Version = 'v' + (1 + [int]$Matches[1])
+    }
+    else {
+        $Version = 'deploy-' + (Get-Date -Format 'yyyyMMdd-HHmmssfff')
+    }
 }
+if ($Version -eq $previous.version) { throw 'La nuova versione deve essere diversa da quella corrente.' }
 
 # 2. Shutdown controllato: il server chiede ai browser di mettere in pausa i circuit.
 Write-Step 'Richiesta di shutdown controllato (POST /demo/shutdown)'
-Invoke-RestMethod -Method Post -Uri "$baseUrl/demo/shutdown" -TimeoutSec 10 | Out-Null
+Invoke-RestMethod "$baseUrl/demo/shutdown" -Method Post -TimeoutSec 10 | Out-Null
 
 # 3. Attesa della terminazione del processo (nessuna terminazione forzata).
-Write-Step "Attesa della terminazione del processo $($current.processId)"
-$oldProcess = Get-Process -Id $current.processId -ErrorAction SilentlyContinue
-if ($oldProcess) {
-    try {
-        $oldProcess | Wait-Process -Timeout $ShutdownTimeoutSeconds
-    }
-    catch {
-        throw "Il processo $($current.processId) non è terminato entro $ShutdownTimeoutSeconds secondi."
-    }
+Write-Step "Attesa della terminazione del processo $($previous.processId)"
+if (-not $previousProcess.WaitForExit($TimeoutSeconds * 1000)) {
+    throw "Timeout: PID $($previous.processId) ancora attivo. Nessuna terminazione forzata eseguita."
 }
 Write-Host '    Processo terminato.'
 
 # 4. Nuova versione.
-Write-Step "Nuova versione: $($current.version) -> $NewVersion"
-$env:DEMO_VERSION = $NewVersion
+Write-Step "Nuova versione: $($previous.version) -> $Version"
+$environment['DEMO_VERSION'] = $Version
 
-# 5. Riavvio sulla stessa porta (il progetto è già compilato: --no-build rende il riavvio rapido).
-Write-Step "Avvio della nuova istanza (profilo $LaunchProfile)"
-$arguments = @('run', '--project', "`"$projectPath`"", '--no-build', '--launch-profile', $LaunchProfile)
-if ($LogFile) {
-    Start-Process -FilePath 'dotnet' -ArgumentList $arguments -WorkingDirectory $repoRoot -WindowStyle Hidden `
-        -RedirectStandardOutput $LogFile -RedirectStandardError "$LogFile.err" | Out-Null
+# 5. Riavvio sugli stessi URL, eseguendo direttamente l'assembly già compilato.
+Write-Step "Avvio della nuova istanza su $($applicationUrls -join ' ; ')"
+$logDirectory = Join-Path $repository '.demo\logs'
+New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
+$stamp = Get-Date -Format 'yyyyMMdd-HHmmssfff'
+$stdout = Join-Path $logDirectory "$stamp.stdout.log"
+$stderr = Join-Path $logDirectory "$stamp.stderr.log"
+$oldEnvironment = @{}
+foreach ($key in $environment.Keys) {
+    $oldEnvironment[$key] = [Environment]::GetEnvironmentVariable($key, 'Process')
 }
-else {
-    Start-Process -FilePath 'dotnet' -ArgumentList $arguments -WorkingDirectory $repoRoot | Out-Null
+try {
+    foreach ($key in $environment.Keys) {
+        [Environment]::SetEnvironmentVariable($key, $environment[$key], 'Process')
+    }
+    $process = Start-Process -FilePath (Get-Command dotnet -CommandType Application | Select-Object -First 1).Source `
+        -ArgumentList @(('"{0}"' -f $assembly), '--urls', ('"{0}"' -f ($applicationUrls -join ';'))) `
+        -WorkingDirectory $project -NoNewWindow -PassThru `
+        -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+}
+finally {
+    foreach ($key in $oldEnvironment.Keys) {
+        [Environment]::SetEnvironmentVariable($key, $oldEnvironment[$key], 'Process')
+    }
 }
 
 # 6. Attesa della disponibilità.
 Write-Step 'Attesa della disponibilità del server'
-$deadline = (Get-Date).AddSeconds($StartupTimeoutSeconds)
-do {
-    Start-Sleep -Milliseconds 500
-    $updated = Get-Health
-} while ((-not $updated -or $updated.processId -eq $current.processId) -and (Get-Date) -lt $deadline)
-
-if (-not $updated) {
-    throw "La nuova istanza non ha risposto entro $StartupTimeoutSeconds secondi."
+$deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+$lastHealthError = 'Nessuna risposta'
+while ([DateTime]::UtcNow -lt $deadline) {
+    $process.Refresh()
+    if ($process.HasExited) {
+        throw "Nuova istanza terminata con codice $($process.ExitCode). Consultare $stdout e $stderr."
+    }
+    try {
+        $health = Invoke-RestMethod "$baseUrl/health" -TimeoutSec 2
+    }
+    catch {
+        $lastHealthError = $_.Exception.Message
+        Start-Sleep -Milliseconds 500
+        continue
+    }
+    if ($health.status -eq 'ok' -and $health.version -eq $Version -and $health.processId -eq $process.Id) {
+        Write-Host ''
+        Write-Host "Deploy completato: versione $($previous.version) -> $Version, PID $($previous.processId) -> $($health.processId)" -ForegroundColor Green
+        Write-Host "URL: $($applicationUrls -join ' ; ')"
+        Write-Host "Log: $stdout"
+        Write-Host "Errori: $stderr"
+        Write-Host 'Torna al browser: la sessione riprende automaticamente con lo stato precedente.'
+        return
+    }
+    throw "Risposta health inattesa: PID/versione non corrispondono alla nuova istanza ($($process.Id), $Version)."
 }
-
-Write-Host ''
-Write-Host "Deploy completato: versione $($current.version) -> $($updated.version), PID $($current.processId) -> $($updated.processId)" -ForegroundColor Green
-Write-Host 'Torna al browser: la sessione riprende automaticamente con lo stato precedente.'
+throw "Timeout health: $lastHealthError. PID avviato: $($process.Id). Consultare $stdout e $stderr; nessuna terminazione forzata eseguita."

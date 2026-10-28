@@ -64,17 +64,20 @@ Non salvare mai la chiave nel repository.
 1. legge versione e PID da `/health`;
 2. chiede uno shutdown controllato (`POST /demo/shutdown`, solo in Development e da localhost);
 3. l'app mette in pausa i circuit: lo stato persistente viene inviato al browser;
-4. attende la fine del processo e avvia una nuova istanza con `DEMO_VERSION` incrementata;
+4. attende la fine del processo e avvia una nuova istanza con `DEMO_VERSION` incrementata,
+   in ascolto su tutti gli URL del profilo (con `https`: `https://localhost:7255` e `http://localhost:5050`);
 5. il modal di riconnessione rileva il server e chiama `Blazor.resumeCircuit()`.
 
 ```powershell
 # app già avviata con: dotnet run --project src/Dottor.WPC2026.Web --launch-profile https
-pwsh ./scripts/deploy-demo.ps1                     # profilo https (default)
+pwsh ./scripts/deploy-demo.ps1                     # profilo https (default), nessun parametro necessario
 pwsh ./scripts/deploy-demo.ps1 -LaunchProfile http
-pwsh ./scripts/deploy-demo.ps1 -NewVersion v42 -LogFile ./deploy.log
+pwsh ./scripts/deploy-demo.ps1 -Version v42 -Configuration Release
 ```
 
-Compila prima di eseguire lo script: la nuova istanza parte con `dotnet run --no-build`.
+Compila prima di eseguire lo script: la nuova istanza esegue direttamente
+`bin/<Configuration>/net11.0/Dottor.WPC2026.Web.dll` con `--urls` del profilo.
+L'output della nuova istanza viene scritto in `.demo/logs/`.
 La nuova istanza resta attiva in background: fermala dal Task Manager o con `Stop-Process -Id <PID>`
 (il PID è mostrato nella pagina e restituito da `/health`).
 
