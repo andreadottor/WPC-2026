@@ -2,7 +2,10 @@
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">Blazor .NET 11 · WPC 2026</a>
+        <a class="navbar-brand" href="">
+            <span class="brand-title">Blazor .NET 11</span>
+            <span class="brand-subtitle">WPC 2026 · Demo</span>
+        </a>
     </div>
 </div>
 
@@ -11,20 +14,29 @@
 
     <div class="nav-scrollable">
         <nav class="nav flex-column">
-            <div class="nav-item px-3">
+            <div class="nav-item">
                 <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                    <span class="demo-nav-number">⌂</span> Home
+                    <span class="nav-badge">⌂</span>
+                    <span class="nav-title">Home</span>
                 </NavLink>
             </div>
 
             @foreach (var chapter in DemoCatalog.ByChapter)
             {
-                <div class="demo-nav-chapter px-3">@chapter.Key</div>
+                var (chapterNumber, chapterName) = SplitChapter(chapter.Key);
+                <div class="nav-chapter">
+                    @if (chapterNumber is not null)
+                    {
+                        <span class="nav-chapter-number">@chapterNumber</span>
+                    }
+                    <span>@chapterName</span>
+                </div>
                 @foreach (var demo in chapter)
                 {
-                    <div class="nav-item px-3">
+                    <div class="nav-item">
                         <NavLink class="nav-link" href="@demo.Url">
-                            <span class="demo-nav-number">@(demo.Number?.ToString() ?? "+")</span> @demo.Title
+                            <span class="nav-badge">@(demo.Number?.ToString() ?? "+")</span>
+                            <span class="nav-title">@demo.Title</span>
                         </NavLink>
                     </div>
                 }
@@ -32,3 +44,11 @@
         </nav>
     </div>
 </nav-menu>
+
+@code {
+    private static (string? Number, string Name) SplitChapter(string chapter)
+    {
+        var parts = chapter.Split(" · ", 2);
+        return parts.Length == 2 ? (parts[0], parts[1]) : (null, chapter);
+    }
+}

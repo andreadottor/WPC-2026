@@ -60,29 +60,6 @@ h1:focus {
 }
 
 /* ---------- WPC 2026 demo ---------- */
-.demo-nav-number {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.5rem;
-    height: 1.5rem;
-    margin-right: .5rem;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, .15);
-    font-size: .8rem;
-    font-weight: 600;
-}
-
-.demo-nav-chapter {
-    margin-top: .75rem;
-    padding-top: .25rem;
-    font-size: .7rem;
-    font-weight: 600;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, .55);
-}
-
 .demo-card {
     transition: transform .12s ease, box-shadow .12s ease;
 }
