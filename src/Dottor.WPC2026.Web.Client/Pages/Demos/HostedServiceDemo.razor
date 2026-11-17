@@ -1,13 +1,13 @@
 @page "/demo/hosted-service"
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
 @implements IDisposable
-@inject TicketStatsMonitor Monitor
+@inject KitchenMonitor Monitor
 
 <PageTitle>Demo 6 · IHostedService in WebAssembly</PageTitle>
 
 <DemoHeader Number="6" Title="IHostedService in Blazor WebAssembly">
-    Un servizio in background che gira nel browser: parte insieme al runtime WebAssembly, aggiorna i dati
-    ogni @TicketStatsMonitor.Interval.TotalSeconds secondi e continua a lavorare anche quando cambi pagina.
+    Il monitor della cucina è un servizio in background che gira nel browser: parte insieme al runtime WebAssembly, controlla il forno
+    ogni @KitchenMonitor.Interval.TotalSeconds secondi e continua a lavorare anche quando cambi pagina.
 </DemoHeader>
 
 @if (Monitor.LastError is not null)
@@ -19,25 +19,25 @@
     <div class="col-lg-7">
         <div class="card h-100">
             <div class="card-header fw-semibold d-flex justify-content-between">
-                Statistiche ticket (dal server)
+                🔥 Monitor della cucina (dal server)
                 <span class="badge text-bg-light border" data-testid="polls">Aggiornamenti: @Monitor.Polls</span>
             </div>
             <div class="card-body">
                 @if (Monitor.Latest is { } stats)
                 {
                     <div class="row text-center g-3 mb-3">
-                        <div class="col-4"><div class="display-6" data-testid="total">@stats.Total</div><div class="small text-body-secondary">Ticket totali</div></div>
-                        <div class="col-4"><div class="display-6">@stats.Open</div><div class="small text-body-secondary">Aperti</div></div>
-                        <div class="col-4"><div class="display-6 text-danger">@stats.Critical</div><div class="small text-body-secondary">Critici non chiusi</div></div>
+                        <div class="col-4"><div class="display-6" data-testid="total">@stats.Total</div><div class="small text-body-secondary">Ordini di oggi</div></div>
+                        <div class="col-4"><div class="display-6 text-warning">@stats.InOven</div><div class="small text-body-secondary">Pizze in forno</div></div>
+                        <div class="col-4"><div class="display-6 text-danger">@stats.Starving</div><div class="small text-body-secondary">Clienti con fame da lupi 🐺</div></div>
                     </div>
-                    <p class="small mb-1">Ultimo ticket: <strong>@stats.LastTicketTitle</strong></p>
+                    <p class="small mb-1">Ultimo ordine: <strong>@stats.LastOrder</strong></p>
                     <p class="small text-body-secondary mb-0">
-                        Dati generati alle @stats.GeneratedAt.ToString("HH:mm:ss") dalla versione @stats.ServerVersion del server.
+                        Dati sfornati alle @stats.GeneratedAt.ToString("HH:mm:ss") dalla versione @stats.ServerVersion del server.
                     </p>
                 }
                 else
                 {
-                    <p class="text-body-secondary mb-0">In attesa del primo aggiornamento...</p>
+                    <p class="text-body-secondary mb-0">Accendo il forno...</p>
                 }
             </div>
         </div>
@@ -59,18 +59,18 @@
         </div>
 
         <pre class="small bg-body-tertiary p-2 rounded mt-3 mb-0">// Program.cs del progetto .Client
-builder.Services.AddSingleton&lt;TicketStatsMonitor&gt;();
+builder.Services.AddSingleton&lt;KitchenMonitor&gt;();
 builder.Services.AddHostedService(sp =&gt;
-    sp.GetRequiredService&lt;TicketStatsMonitor&gt;());
+    sp.GetRequiredService&lt;KitchenMonitor&gt;());
 
-class TicketStatsMonitor : BackgroundService { … }</pre>
+class KitchenMonitor : BackgroundService { … }</pre>
     </div>
 </div>
 
 <ObserveBox>
     <ol class="mb-2">
         <li>Il contatore degli aggiornamenti sale da solo: il polling lo fa il servizio, non il componente.</li>
-        <li>In un'altra scheda crea un ticket nella <a href="demo/static-ssr-validation" target="_blank">Demo 3</a>: dopo qualche secondo il totale cambia.</li>
+        <li>In un'altra scheda ordina una pizza nella <a href="demo/static-ssr-validation" target="_blank">Demo 3</a>: dopo qualche secondo il totale degli ordini cambia.</li>
         <li>Vai su un'altra pagina e torna qui: il componente è nuovo (orario di creazione diverso), il servizio no (contatore e orario di avvio invariati).</li>
     </ol>
     <p class="small text-body-secondary mb-0">

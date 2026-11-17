@@ -14,7 +14,7 @@
 <div class="card mb-4">
     <div class="card-header fw-semibold">La pagina è reattiva?</div>
     <div class="card-body">
-        <div class="ww-track mb-3" aria-hidden="true"><div class="ww-ball"></div></div>
+        <div class="ww-track mb-3" aria-hidden="true"><div class="ww-ball">🍕</div></div>
         <div class="d-flex flex-wrap align-items-center gap-4">
             <div>Orologio aggiornato da .NET: <strong class="font-monospace fs-5" data-testid="clock">@clock.ToString("HH:mm:ss.f")</strong></div>
             <input class="form-control w-auto" placeholder="Prova a scrivere qui durante il calcolo..." />
@@ -25,9 +25,9 @@
 <div class="row g-4">
     <div class="col-lg-5">
         <div class="card">
-            <div class="card-header fw-semibold">Analisi di un CSV di ticket</div>
+            <div class="card-header fw-semibold">🧾 Analisi del CSV degli ordini</div>
             <div class="card-body">
-                <label class="form-label" for="rows">Righe da generare</label>
+                <label class="form-label" for="rows">Ordini da analizzare</label>
                 <select id="rows" class="form-select mb-3" @bind="rows" disabled="@busy">
                     <option value="100000">100.000</option>
                     <option value="250000">250.000</option>
@@ -70,7 +70,7 @@
             <div class="card-body">
                 @if (lastRun is null)
                 {
-                    <p class="text-body-secondary mb-0">Avvia un'analisi per vedere il risultato.</p>
+                    <p class="text-body-secondary mb-0">Avvia un'analisi per scoprire la pizza più amata (e quella con più reclami).</p>
                 }
                 else
                 {
@@ -81,17 +81,17 @@
                     </p>
                     <table class="table table-sm mb-0">
                         <thead>
-                            <tr><th>Categoria</th><th class="text-end">Ticket</th><th class="text-end">Media (h)</th><th class="text-end">P95 (h)</th><th class="text-end">Riaperti</th></tr>
+                            <tr><th>Pizza</th><th class="text-end">Ordini</th><th class="text-end">Consegna media (min)</th><th class="text-end">P95 (min)</th><th class="text-end">Reclami</th></tr>
                         </thead>
                         <tbody>
-                            @foreach (var category in lastRun.Summary.Categories)
+                            @foreach (var pizza in lastRun.Summary.Pizzas)
                             {
                                 <tr>
-                                    <td>@category.Category</td>
-                                    <td class="text-end">@category.Tickets.ToString("N0")</td>
-                                    <td class="text-end">@category.AverageHours</td>
-                                    <td class="text-end">@category.P95Hours</td>
-                                    <td class="text-end">@category.Reopened.ToString("N0")</td>
+                                    <td>🍕 @pizza.Pizza</td>
+                                    <td class="text-end">@pizza.Orders.ToString("N0")</td>
+                                    <td class="text-end">@pizza.AverageMinutes</td>
+                                    <td class="text-end">@pizza.P95Minutes</td>
+                                    <td class="text-end">@pizza.Complaints.ToString("N0")</td>
                                 </tr>
                             }
                         </tbody>
@@ -104,7 +104,7 @@
 
 <ObserveBox>
     <ol class="mb-2">
-        <li>Premi <em>Analizza sul thread della UI</em>: la pallina e l'orologio si fermano e non puoi scrivere nel campo di testo finché il calcolo non termina.</li>
+        <li>Premi <em>Analizza sul thread della UI</em>: la pizza smette di girare, l'orologio si ferma e non puoi scrivere nel campo di testo finché il calcolo non termina.</li>
         <li>Premi <em>Analizza nel Web Worker</em>: stesso codice C#, stesso risultato, ma la pagina resta fluida.</li>
         <li>Il worker parte una volta sola (<code>WebWorkerClient.CreateAsync</code>) e carica il suo runtime .NET: guarda lo stato "pronto".</li>
     </ol>

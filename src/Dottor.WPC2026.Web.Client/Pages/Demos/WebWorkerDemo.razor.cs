@@ -7,7 +7,7 @@ namespace Dottor.WPC2026.Web.Client.Pages.Demos;
 
 public partial class WebWorkerDemo
 {
-    private const string AnalyzeMethod = "Dottor.WPC2026.WebWorker.WorkerMethods.AnalyzeTickets";
+    private const string AnalyzeMethod = "Dottor.WPC2026.WebWorker.WorkerMethods.AnalyzeOrders";
 
     private WebWorkerClient? worker;
     private string workerStatus = "in attesa dell'interattività";
@@ -63,7 +63,7 @@ public partial class WebWorkerDemo
 
     private async Task AnalyzeOnUiThread()
     {
-        await RunAsync(inWorker: false, data => Task.FromResult(TicketCsvAnalyzer.Analyze(data)));
+        await RunAsync(inWorker: false, data => Task.FromResult(OrderCsvAnalyzer.Analyze(data)));
     }
 
     private async Task AnalyzeInWorker()
@@ -89,9 +89,9 @@ public partial class WebWorkerDemo
         busy = true;
         if (csv is null || generatedRows != rows)
         {
-            status = "generazione del CSV...";
+            status = "stampa delle comande (generazione del CSV)...";
             await Task.Delay(50); // lascia al browser il tempo di disegnare lo stato
-            csv = TicketCsvAnalyzer.Generate(rows);
+            csv = OrderCsvAnalyzer.Generate(rows);
             generatedRows = rows;
         }
 

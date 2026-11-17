@@ -14,7 +14,7 @@
 <div class="row g-4">
     <div class="col-lg-7">
         <div class="card">
-            <div class="card-header fw-semibold">Registrazione utente</div>
+            <div class="card-header fw-semibold">🍕 Iscrizione al Pizza Club (tessera fedeltà)</div>
             <div class="card-body">
                 <EditForm EditContext="editContext" OnValidSubmit="RegisterAsync" FormName="registration">
                     <DataAnnotationsValidator />
@@ -64,11 +64,11 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label" for="age">
-                            <DisplayName For="() => model.Age" /> <span class="badge text-bg-light border">sincrona</span>
+                        <label class="form-label" for="pizzas">
+                            <DisplayName For="() => model.PizzasPerMonth" /> <span class="badge text-bg-light border">sincrona</span>
                         </label>
-                        <InputNumber id="age" class="form-control" @bind-Value="model.Age" />
-                        <ValidationMessage For="() => model.Age" />
+                        <InputNumber id="pizzas" class="form-control" @bind-Value="model.PizzasPerMonth" />
+                        <ValidationMessage For="() => model.PizzasPerMonth" />
                     </div>
 
                     <button type="submit" class="btn btn-primary" disabled="@(EmailPending || isSubmitting)">
@@ -76,7 +76,7 @@
                         {
                             <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
                         }
-                        Registrati
+                        Iscriviti al Club
                     </button>
                     @if (EmailPending)
                     {
@@ -124,7 +124,7 @@
         </div>
 
         <div class="card">
-            <div class="card-header fw-semibold">Email già registrate</div>
+            <div class="card-header fw-semibold">Email già nel Pizza Club</div>
             <ul class="list-group list-group-flush small">
                 @foreach (var email in Users.RegisteredEmails)
                 {
@@ -140,8 +140,8 @@
 
 <ObserveBox>
     <ol class="mb-2">
-        <li>Lascia vuoto il nome o metti un'età di 15: l'errore compare <strong>subito</strong> (regola sincrona).</li>
-        <li>Scrivi <code>mario.rossi@example.com</code> ed esci dal campo: parte lo spinner per ~800 ms, poi l'errore "già registrato".</li>
+        <li>Lascia vuoto il nome o dichiara 45 pizze al mese: l'errore compare <strong>subito</strong> (regola sincrona).</li>
+        <li>Scrivi <code>mario.rossi@example.com</code> ed esci dal campo: parte lo spinner per ~800 ms, poi l'errore "ha già la tessera".</li>
         <li>Modifica di nuovo l'email prima che finisca: il controllo precedente viene <strong>annullato</strong> (vedi registro e log del server).</li>
         <li>Correggi in <code>nuovo@example.com</code>: compare "Disponibile" e il pulsante si riabilita.</li>
         <li>Prova <code>errore@example.com</code> per vedere lo stato <em>faulted</em>.</li>

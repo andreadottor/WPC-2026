@@ -11,7 +11,7 @@ public partial class CircuitPause
     public int Count { get; set; }
 
     [PersistentState]
-    public TicketDraft? Ticket { get; set; }
+    public OrderDraft? Order { get; set; }
 
     // Memorizza quale processo ha creato lo stato: dopo il deploy è diverso da quello corrente.
     [PersistentState]
@@ -22,7 +22,7 @@ public partial class CircuitPause
 
     protected override void OnInitialized()
     {
-        Ticket ??= new TicketDraft();
+        Order ??= new OrderDraft();
         OriginalProcessId ??= Instance.ProcessId;
         OriginalVersion ??= Instance.Version;
     }

@@ -3,10 +3,10 @@ using Dottor.WPC2026.Web.Services;
 
 namespace Dottor.WPC2026.Web.Components.Shared;
 
-public partial class CategoryReportView
+public partial class MenuView
 {
     private static readonly System.Globalization.CultureInfo Italian = System.Globalization.CultureInfo.GetCultureInfo("it-IT");
-    private CategoryReport? report;
+    private MenuReport? report;
 
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
@@ -24,5 +24,5 @@ public partial class CategoryReportView
     public TimeSpan? ExpiresAfter { get; set; }
 
     protected override async Task OnInitializedAsync() =>
-        report = await Reports.GenerateAsync(Category, Portion, HttpContext?.RequestAborted ?? CancellationToken.None);
+        report = await Menu.GenerateAsync(Category, Portion, HttpContext?.RequestAborted ?? CancellationToken.None);
 }

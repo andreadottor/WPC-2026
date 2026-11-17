@@ -7,7 +7,7 @@
 
 <PageTitle>Demo 10 · Agentic UI</PageTitle>
 
-<DemoHeader Number="10" Title="Agentic UI: l'agente propone, l'utente decide">
+<DemoHeader Number="10" Title="Agentic UI: l'agente propone, il pizzaiolo decide">
     Con <code>Microsoft.AspNetCore.Components.AI</code> l'agente condivide lo stato con la UI (<code>UIAgent&lt;DocumentState&gt;</code>),
     propone modifiche come <em>stato predittivo</em>, chiama tool server-side e chiede approvazione prima delle azioni sensibili.
 </DemoHeader>
@@ -18,10 +18,10 @@
 
 <ObserveBox>
     <ul class="mb-0">
-        <li><strong>Stato condiviso</strong>: modifica il documento a sinistra e poi chiedi all'agente di migliorarlo: lavora sulla versione aggiornata.</li>
-        <li><strong>Stato predittivo</strong>: la proposta compare subito nel documento con le differenze evidenziate; nulla è definitivo finché non confermi.</li>
+        <li><strong>Stato condiviso</strong>: modifica la scheda della pizza a sinistra e poi chiedi all'agente di migliorarla: lavora sulla versione aggiornata.</li>
+        <li><strong>Stato predittivo</strong>: la proposta compare subito nella scheda con le differenze evidenziate; nulla è definitivo finché non confermi.</li>
         <li><strong>UI action</strong>: la conferma o il rifiuto vengono restituiti all'agente come risultato di <code>propose_document</code>.</li>
-        <li><strong>Tool server-side</strong>: "Riassumi il documento" esegue <code>analyze_document</code> e il risultato è mostrato con un blocco tipizzato.</li>
-        <li><strong>Human in the loop</strong>: "Pubblica il documento" usa <code>ApprovalRequiredAIFunction</code>: senza la tua approvazione non succede nulla.</li>
+        <li><strong>Tool server-side</strong>: "Riassumi la scheda" esegue <code>analyze_document</code> e il risultato è mostrato con un blocco tipizzato.</li>
+        <li><strong>Human in the loop</strong>: "Aggiungi la pizza al menu" usa <code>ApprovalRequiredAIFunction</code>: senza la tua approvazione non succede nulla.</li>
     </ul>
 </ObserveBox>

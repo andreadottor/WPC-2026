@@ -3,7 +3,7 @@
 <div class="agentic-layout">
     <section class="card document-preview @(Agent.State.HasPendingPredictiveState ? "pending" : "")" data-testid="document">
         <div class="card-header d-flex flex-wrap align-items-center gap-2">
-            <span class="fw-semibold">Documento condiviso</span>
+            <span class="fw-semibold">🍕 Scheda della pizza del mese</span>
             @if (Agent.State.HasPendingPredictiveState)
             {
                 <span class="badge text-bg-warning" data-testid="pending-badge">Proposta in attesa di conferma</span>
@@ -37,7 +37,7 @@
             {
                 <fieldset disabled="@IsRunning">
                     <div class="mb-2">
-                        <label class="form-label small mb-0" for="doc-title">Titolo</label>
+                        <label class="form-label small mb-0" for="doc-title">Nome della pizza</label>
                         <input id="doc-title" class="form-control fw-semibold" @bind="Document.Title" @bind:event="oninput" data-testid="doc-title" />
                     </div>
                     <div class="mb-2">
@@ -52,14 +52,14 @@
                         </div>
                     }
                 </fieldset>
-                <p class="small text-body-secondary mb-0">Puoi modificare il testo: l'agente riceve sempre lo stato aggiornato.</p>
+                <p class="small text-body-secondary mb-0">Puoi modificare il testo: l'agente riceve sempre la scheda aggiornata.</p>
             }
         </div>
     </section>
 
     <aside class="card agentic-chat">
         <div class="card-header d-flex align-items-center gap-2">
-            <span class="fw-semibold">Assistente</span>
+            <span class="fw-semibold">👨‍🍳 Assistente del pizzaiolo</span>
             <span class="badge @(Ai.IsConfigured ? "text-bg-primary" : "text-bg-warning")" data-testid="ai-mode">@Ai.Description</span>
         </div>
         <div class="sc-ai-root sc-ai-chat-page">
@@ -67,7 +67,7 @@
                 <MessageList>
                     <EmptyContent>
                         <p class="text-body-secondary small p-3 mb-0">
-                            Chiedi all'agente di modificare il documento, oppure scegli un suggerimento qui sotto.
+                            Chiedi all'agente di migliorare la scheda della pizza, oppure scegli un suggerimento qui sotto.
                         </p>
                     </EmptyContent>
                     <ChildContent>
@@ -85,7 +85,7 @@
                                     @if (approval.Status == ApprovalStatus.Pending)
                                     {
                                         <button class="btn btn-sm btn-success me-1" @onclick="approval.Approve">Approva</button>
-                                        <button class="btn btn-sm btn-outline-danger" @onclick="@(() => approval.Reject("L'utente ha rifiutato la pubblicazione."))">Rifiuta</button>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="@(() => approval.Reject("L'utente non vuole ancora mettere la pizza nel menu."))">Rifiuta</button>
                                     }
                                     else
                                     {
@@ -99,7 +99,7 @@
                         <BlockRenderer TBlock="DocumentAnalysisBlock" Context="analysis">
                             <div class="card border-info my-2" data-testid="analysis">
                                 <div class="card-body py-2">
-                                    <div class="small text-uppercase text-info-emphasis fw-semibold">Analisi documento (tool server-side)</div>
+                                    <div class="small text-uppercase text-info-emphasis fw-semibold">Analisi della scheda (tool server-side)</div>
                                     @if (analysis.Analysis is { } result)
                                     {
                                         <div class="d-flex gap-3 my-1">
@@ -135,7 +135,7 @@
             </div>
             <div class="sc-ai-chat-page__footer">
                 <div class="sc-ai-chat-page__input-container">
-                    <MessageInput Placeholder="Descrivi una modifica…" />
+                    <MessageInput Placeholder="Come miglioriamo la pizza?…" />
                 </div>
             </div>
         </div>

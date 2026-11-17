@@ -5,7 +5,7 @@
 <PageTitle>Demo 7 · Virtualize</PageTitle>
 
 <DemoHeader Number="7" Title="Virtualize con elementi di altezza variabile">
-    10.000 eventi con descrizioni di lunghezza diversa, espandibili e riducibili.
+    10.000 eventi dal diario della pizzeria (cucina e rider) con descrizioni di lunghezza diversa, espandibili e riducibili.
     In .NET 11 <code>Virtualize</code> misura le altezze reali, offre <code>ScrollToItemAsync</code>,
     <code>InitialItemIndex</code> e il nuovo <code>AnchorMode</code>.
 </DemoHeader>
@@ -14,7 +14,7 @@
     <div class="col-xl-8">
         <div class="card">
             <div class="card-header fw-semibold d-flex flex-wrap gap-2 align-items-center">
-                Timeline eventi
+                📒 Diario della pizzeria
                 <span class="badge text-bg-light border" data-testid="event-count">@events.Count.ToString("N0") eventi</span>
                 <div class="ms-auto d-flex gap-2 align-items-center">
                     <label class="small" for="anchor">AnchorMode</label>
@@ -38,7 +38,7 @@
                     <button class="btn btn-sm btn-outline-success" @onclick="AddAtTop">+ In cima</button>
                     <button class="btn btn-sm btn-outline-success" @onclick="AddAtBottom">+ In fondo</button>
                     <button class="btn btn-sm @(liveFeed ? "btn-success" : "btn-outline-success")" @onclick="ToggleLiveFeed">
-                        @(liveFeed ? "■ Ferma flusso" : "▶ Flusso in cima")
+                        @(liveFeed ? "■ Ferma flusso" : "▶ Ordini in arrivo")
                     </button>
                     <button class="btn btn-sm btn-outline-secondary" @onclick="() => expanded.Clear()">Riduci tutti</button>
                 </div>
@@ -85,7 +85,7 @@
     <div class="col-xl-4">
         <div class="card">
             <div class="card-header fw-semibold d-flex align-items-center gap-2">
-                Log in tempo reale
+                🛵 Tracking dei rider
                 <span class="badge text-bg-light border">AnchorMode.End</span>
                 <button class="btn btn-sm ms-auto @(logRunning ? "btn-danger" : "btn-success")" @onclick="ToggleLog">
                     @(logRunning ? "■ Stop" : "▶ Avvia")

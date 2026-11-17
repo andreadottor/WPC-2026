@@ -3,16 +3,16 @@ using System.Text.Json.Serialization;
 
 namespace Dottor.WPC2026.Web.Models;
 
-/// <summary>Stato condiviso tra UI e agente (UIAgent&lt;DocumentState&gt;).</summary>
+/// <summary>Stato condiviso tra UI e agente (UIAgent&lt;DocumentState&gt;): la scheda della pizza del mese.</summary>
 public sealed class DocumentState
 {
-    [Description("Titolo del documento")]
+    [Description("Nome della pizza")]
     public string Title { get; set; } = "";
 
-    [Description("Breve descrizione del documento")]
+    [Description("Breve descrizione della pizza")]
     public string Description { get; set; } = "";
 
-    [Description("Sezioni del documento, in ordine")]
+    [Description("Sezioni della scheda (impasto, ingredienti, ...), in ordine")]
     public List<DocumentSection> Sections { get; set; } = [];
 
     public DocumentState Clone() => new()
@@ -24,24 +24,24 @@ public sealed class DocumentState
 
     public static DocumentState CreateSample() => new()
     {
-        Title = "Portale prenotazione sale riunioni",
-        Description = "Il progetto ha l'obiettivo di realizzare un portale che consenta ai dipendenti di effettuare la prenotazione delle sale riunioni in modo semplice.",
+        Title = "La Blazor: la pizza del mese",
+        Description = "La pizza ha l'obiettivo di soddisfare gli sviluppatori che hanno fretta di rilasciare, in modo che possano mangiare senza staccarsi dalla tastiera.",
         Sections =
         [
             new()
             {
-                Heading = "Obiettivi",
-                Body = "Al fine di ridurre i conflitti di prenotazione, il portale deve mostrare in tempo reale la disponibilità delle sale. Nel caso in cui una sala risulti essere occupata, il sistema propone delle alternative."
+                Heading = "Impasto",
+                Body = "Al fine di ottenere un impasto leggero, la lievitazione avviene in modo lento per 48 ore. Nel caso in cui l'impasto risulti essere troppo idratato, il pizzaiolo provvede ad aggiungere della farina."
             },
             new()
             {
-                Heading = "Architettura",
-                Body = "L'applicazione è una Blazor Web App .NET 11 che effettua l'accesso ai dati tramite API REST. Le notifiche vengono inviate in modo da avvisare gli utenti delle modifiche."
+                Heading = "Ingredienti",
+                Body = "La pizza viene farcita con pomodoro San Marzano, fior di latte e basilico fresco. In uscita dal forno vengono aggiunti dei pomodorini confit in modo da dare colore. L'ananas non è previsto."
             },
             new()
             {
-                Heading = "Rilascio",
-                Body = "Il rilascio avviene in modo graduale al fine di raccogliere il feedback dei primi utenti."
+                Heading = "Cottura e consegna",
+                Body = "La cottura avviene in forno a legna per 90 secondi al fine di mantenere il cornicione morbido. La consegna avviene tramite rider in modo da arrivare ancora calda."
             }
         ]
     };

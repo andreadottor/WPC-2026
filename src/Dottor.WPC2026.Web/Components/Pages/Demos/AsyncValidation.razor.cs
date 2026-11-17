@@ -80,8 +80,8 @@ public partial class AsyncValidation
     {
         isSubmitting = true;
         await Users.RegisterAsync(model.Email!, model.FullName!);
-        registeredMessage = $"Registrazione completata per {model.FullName} ({model.Email}). Ora l'indirizzo risulta già registrato.";
-        AddLog($"Submit valido: {model.Email} registrata");
+        registeredMessage = $"Benvenuto nel Pizza Club, {model.FullName}! 🍕 La tessera è legata a {model.Email}: ora l'indirizzo risulta già iscritto.";
+        AddLog($"Submit valido: {model.Email} iscritta al Pizza Club");
         isSubmitting = false;
         var message = registeredMessage;
         CreateEditContext();

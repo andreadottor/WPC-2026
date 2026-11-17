@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 
 namespace Dottor.WPC2026.Web.Services;
 
-/// <summary>Archivio utenti in memoria con latenza simulata.</summary>
+/// <summary>Soci del Pizza Club in memoria, con latenza simulata.</summary>
 public sealed class UserService(ILogger<UserService> logger)
 {
     private static readonly TimeSpan SimulatedLatency = TimeSpan.FromMilliseconds(800);
@@ -32,7 +32,7 @@ public sealed class UserService(ILogger<UserService> logger)
         // Permette di mostrare lo stato "faulted" durante la demo.
         if (email.StartsWith("errore@", StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("Servizio di verifica non disponibile.");
+            throw new InvalidOperationException("Servizio di verifica non disponibile: il server è in pausa pranzo.");
         }
 
         var exists = _users.ContainsKey(email);

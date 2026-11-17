@@ -26,9 +26,26 @@ nav-menu {
 
 .navbar-brand {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: .55rem;
     line-height: 1.15;
     padding: 0;
+}
+
+.brand-logo {
+    font-size: 1.7rem;
+    line-height: 1;
+    display: inline-block;
+    transition: transform .4s ease;
+}
+
+.navbar-brand:hover .brand-logo {
+    transform: rotate(180deg);
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
 }
 
 .brand-title {
@@ -40,7 +57,7 @@ nav-menu {
 .brand-subtitle {
     font-size: .72rem;
     letter-spacing: .04em;
-    color: rgba(255, 255, 255, .6);
+    color: #ffd89a;
 }
 
 .bi {
@@ -114,7 +131,7 @@ nav-menu {
             bottom: .35rem;
             width: 3px;
             border-radius: 2px;
-            background: #7cc4ff;
+            background: #ffc04d;
         }
 
 .nav-badge {
@@ -132,8 +149,8 @@ nav-menu {
 }
 
 .nav-item ::deep a.active .nav-badge {
-    background: #7cc4ff;
-    color: #0b1f4a;
+    background: #ffc04d;
+    color: #5a1410;
 }
 
 .nav-title {
@@ -156,7 +173,7 @@ nav-menu {
 }
 
 .nav-chapter-number {
-    color: #7cc4ff;
+    color: #ffc04d;
 }
 .nav-scrollable {
     display: none;

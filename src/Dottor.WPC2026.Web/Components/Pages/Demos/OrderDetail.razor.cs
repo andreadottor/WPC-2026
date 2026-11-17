@@ -3,9 +3,9 @@ using Dottor.WPC2026.Web.Models;
 
 namespace Dottor.WPC2026.Web.Components.Pages.Demos;
 
-public partial class TicketDetail
+public partial class OrderDetail
 {
-    private Ticket? ticket;
+    private Order? order;
 
     [Parameter]
     public int Id { get; set; }
@@ -19,5 +19,5 @@ public partial class TicketDetail
             ? ReturnUrl
             : "demo/quickgrid";
 
-    protected override void OnParametersSet() => ticket = Tickets.GetById(Id);
+    protected override void OnParametersSet() => order = Orders.GetById(Id);
 }

@@ -4,10 +4,10 @@ namespace Dottor.WPC2026.Web.Models;
 
 public enum EventSeverity
 {
-    [Display(Name = "Info")] Info,
-    [Display(Name = "Avviso")] Warning,
-    [Display(Name = "Errore")] Error,
-    [Display(Name = "Critico")] Critical
+    [Display(Name = "Tutto ok")] Info,
+    [Display(Name = "Attenzione")] Warning,
+    [Display(Name = "Problema")] Error,
+    [Display(Name = "Allarme rosso")] Critical
 }
 
 public sealed record TimelineEvent(

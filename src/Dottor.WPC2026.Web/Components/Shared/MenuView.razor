@@ -1,4 +1,4 @@
-@inject CategoryReportService Reports
+@inject MenuService Menu
 
 <section class="card h-100" id="@($"report-{Portion}")">
     <div class="card-body">
@@ -7,7 +7,7 @@
         {
             <dl class="row diagnostics mb-3">
                 <dt class="col-sm-5">Categoria</dt><dd class="col-sm-7" data-field="category">@report.Category</dd>
-                <dt class="col-sm-5">Generato alle</dt><dd class="col-sm-7" data-field="generated-at">@report.GeneratedAt.ToString("HH:mm:ss.fff")</dd>
+                <dt class="col-sm-5">Sfornato alle</dt><dd class="col-sm-7" data-field="generated-at">@report.GeneratedAt.ToString("HH:mm:ss.fff")</dd>
                 <dt class="col-sm-5">Generazione n.</dt><dd class="col-sm-7" data-field="generation"><strong>@report.Generation</strong></dd>
                 @if (ExpiresAfter is { } expiresAfter)
                 {
@@ -16,11 +16,11 @@
                 }
             </dl>
             <table class="table table-sm">
-                <thead><tr><th scope="col">Prodotto</th><th scope="col" class="text-end">Unità</th><th scope="col" class="text-end">Ricavi</th></tr></thead>
+                <thead><tr><th scope="col">Pizza</th><th scope="col" class="text-end">Sfornate</th><th scope="col" class="text-end">Incasso</th></tr></thead>
                 <tbody>
                     @foreach (var row in report.Rows)
                     {
-                        <tr><td>@row.Product</td><td class="text-end">@row.Units</td><td class="text-end">@row.Revenue.ToString("C0", Italian)</td></tr>
+                        <tr><td>🍕 @row.Product</td><td class="text-end">@row.Units</td><td class="text-end">@row.Revenue.ToString("C0", Italian)</td></tr>
                     }
                 </tbody>
                 <tfoot><tr><th scope="row" colspan="2">Totale</th><th class="text-end">@report.Total.ToString("C0", Italian)</th></tr></tfoot>

@@ -9,12 +9,12 @@ public partial class AgenticWorkspace
 {
     private static readonly string[] Suggestions =
     [
-        "Rendi la descrizione più tecnica",
-        "Aggiungi una sezione sulla sicurezza",
-        "Proponi un titolo alternativo",
+        "Rendi la descrizione più golosa",
+        "Aggiungi una sezione sugli allergeni",
+        "Proponi un nome più simpatico",
         "Migliora la chiarezza del testo",
-        "Riassumi il documento",
-        "Pubblica il documento"
+        "Riassumi la scheda",
+        "Aggiungi la pizza al menu a 9,50 €"
     ];
 
     private IDisposable? stateRegistration;

@@ -8,13 +8,13 @@
 @inject IWebHostEnvironment Environment
 @inject ILogger<Maintenance> Logger
 
-<PageTitle>Manutenzione</PageTitle>
+<PageTitle>Chiusura del locale</PageTitle>
 
 <div class="mb-4">
-    <span class="badge text-bg-dark mb-2">⚙ Manutenzione</span>
-    <h1 class="h2 mb-2">Pannello di manutenzione</h1>
+    <span class="badge text-bg-dark mb-2">🔑 Retrobottega</span>
+    <h1 class="h2 mb-2">Chiusura del locale</h1>
     <p class="lead text-body-secondary mb-0">
-        Circuiti attivi su questa istanza e arresto controllato dell'applicazione direttamente dalla UI,
+        Clienti (circuiti) collegati su questa istanza e chiusura controllata dell'applicazione direttamente dalla UI,
         senza script esterni.
     </p>
 </div>
@@ -151,7 +151,7 @@
 
     <div class="col-lg-5">
         <div class="card border-danger">
-            <div class="card-header fw-semibold text-danger">Arresto controllato</div>
+            <div class="card-header fw-semibold text-danger">Abbassa la serranda</div>
             <div class="card-body">
                 <p>
                     Chiama <code>IHostApplicationLifetime.StopApplication()</code>: parte lo stesso shutdown dello
@@ -171,16 +171,16 @@
                 else if (confirming)
                 {
                     <div class="alert alert-danger">
-                        Confermi l'arresto? Verranno messi in pausa <strong>@Shutdown.ActiveCircuitCount</strong> circuiti.
+                        Confermi la chiusura? Verranno messi in pausa <strong>@Shutdown.ActiveCircuitCount</strong> circuiti.
                     </div>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-danger" @onclick="StopApplication">Sì, arresta</button>
+                        <button class="btn btn-danger" @onclick="StopApplication">Sì, chiudi il locale</button>
                         <button class="btn btn-outline-secondary" @onclick="() => confirming = false">Annulla</button>
                     </div>
                 }
                 else
                 {
-                    <button class="btn btn-outline-danger" @onclick="() => confirming = true">Arresta l'applicazione</button>
+                    <button class="btn btn-outline-danger" @onclick="() => confirming = true">🔒 Chiudi il locale (arresta l'app)</button>
                 }
             </div>
         </div>

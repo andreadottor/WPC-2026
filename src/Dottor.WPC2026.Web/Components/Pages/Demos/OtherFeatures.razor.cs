@@ -5,7 +5,7 @@ namespace Dottor.WPC2026.Web.Components.Pages.Demos;
 
 public partial class OtherFeatures
 {
-    private readonly NewTicketModel sample = new();
+    private readonly NewOrderModel sample = new();
     private BrowserOptions? browserOptions;
 
     [CascadingParameter]

@@ -10,7 +10,7 @@
         }
         else
         {
-            <p class="mb-2">Applicare al documento le modifiche evidenziate?</p>
+            <p class="mb-2">Applicare alla scheda le modifiche evidenziate?</p>
             <button class="btn btn-sm btn-success me-1" disabled="@busy" @onclick="() => RespondAsync(true)" data-testid="accept">Accetta</button>
             <button class="btn btn-sm btn-outline-danger" disabled="@busy" @onclick="() => RespondAsync(false)" data-testid="reject">Rifiuta</button>
         }

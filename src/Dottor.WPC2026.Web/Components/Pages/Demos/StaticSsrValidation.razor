@@ -1,5 +1,5 @@
 @page "/demo/static-ssr-validation"
-@inject TicketService Tickets
+@inject OrderService Orders
 @inject NavigationManager Navigation
 
 @* Nessun @rendermode: la pagina è renderizzata in Static SSR, senza circuito e senza WebAssembly. *@
@@ -16,9 +16,9 @@
 {
     <div class="alert alert-success" role="status" data-testid="flash">
         @flashMessage
-        @if (flashTicketId is int id)
+        @if (flashOrderId is int id)
         {
-            <a class="alert-link ms-1" href="demo/quickgrid/@id">Apri il dettaglio</a>
+            <a class="alert-link ms-1" href="demo/quickgrid/@id">Segui l'ordine 🛵</a>
         }
     </div>
 }
@@ -26,22 +26,28 @@
 <div class="row g-4">
     <div class="col-lg-7">
         <div class="card">
-            <div class="card-header fw-semibold">Nuovo ticket</div>
+            <div class="card-header fw-semibold">🍕 Nuovo ordine</div>
             <div class="card-body">
-                <EditForm Model="Input" FormName="new-ticket" OnValidSubmit="CreateTicket" method="post">
+                <EditForm Model="Input" FormName="new-order" OnValidSubmit="PlaceOrder" method="post">
                     <DataAnnotationsValidator />
                     <ValidationSummary class="alert alert-danger py-2" />
 
                     <div class="mb-3">
-                        <label class="form-label" for="title"><DisplayName For="() => Input!.Title" /></label>
-                        <InputText id="title" class="form-control" @bind-Value="Input!.Title" />
-                        <ValidationMessage For="() => Input!.Title" />
+                        <label class="form-label" for="pizza"><DisplayName For="() => Input!.Pizza" /></label>
+                        <InputText id="pizza" class="form-control" list="menu" placeholder="Es. Margherita" @bind-Value="Input!.Pizza" />
+                        <datalist id="menu">
+                            @foreach (var pizza in OrderService.Pizzas)
+                            {
+                                <option value="@pizza"></option>
+                            }
+                        </datalist>
+                        <ValidationMessage For="() => Input!.Pizza" />
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label" for="description"><DisplayName For="() => Input!.Description" /></label>
-                        <InputTextArea id="description" class="form-control" rows="3" @bind-Value="Input!.Description" />
-                        <ValidationMessage For="() => Input!.Description" />
+                        <label class="form-label" for="address"><DisplayName For="() => Input!.Address" /></label>
+                        <InputTextArea id="address" class="form-control" rows="2" placeholder="Via, numero civico, città (e citofono!)" @bind-Value="Input!.Address" />
+                        <ValidationMessage For="() => Input!.Address" />
                     </div>
 
                     <div class="row">
@@ -51,19 +57,19 @@
                             <ValidationMessage For="() => Input!.Email" />
                         </div>
                         <div class="col-md-5 mb-3">
-                            <label class="form-label" for="priority"><DisplayName For="() => Input!.Priority" /></label>
-                            <InputSelect id="priority" class="form-select" @bind-Value="Input!.Priority">
+                            <label class="form-label" for="hunger"><DisplayName For="() => Input!.Hunger" /></label>
+                            <InputSelect id="hunger" class="form-select" @bind-Value="Input!.Hunger">
                                 <option value="">-- Seleziona --</option>
-                                @foreach (var priority in Enum.GetValues<TicketPriority>())
+                                @foreach (var hunger in Enum.GetValues<HungerLevel>())
                                 {
-                                    <option value="@priority">@priority.ToDisplayName()</option>
+                                    <option value="@hunger">@hunger.ToDisplayName()</option>
                                 }
                             </InputSelect>
-                            <ValidationMessage For="() => Input!.Priority" />
+                            <ValidationMessage For="() => Input!.Hunger" />
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Invia ticket</button>
+                    <button type="submit" class="btn btn-primary">Ordina 🍕</button>
                 </EditForm>
             </div>
         </div>
@@ -82,25 +88,25 @@
                     <dd class="col-6">@HttpContext?.Request.Method</dd>
                     <dt class="col-6">POST ricevuti dal server</dt>
                     <dd class="col-6" data-testid="post-count">@postCount</dd>
-                    <dt class="col-6">Ticket totali</dt>
-                    <dd class="col-6">@Tickets.GetAll().Count()</dd>
+                    <dt class="col-6">Ordini totali</dt>
+                    <dd class="col-6">@Orders.GetAll().Count()</dd>
                 </dl>
             </div>
         </div>
 
         <div class="card mt-4">
-            <div class="card-header fw-semibold">I tuoi ticket in questa sessione <span class="badge text-bg-light border">Session</span></div>
+            <div class="card-header fw-semibold">I tuoi ordini in questa sessione <span class="badge text-bg-light border">Session</span></div>
             <div class="card-body">
-                @if (sessionTickets.Count == 0)
+                @if (sessionOrders.Count == 0)
                 {
-                    <p class="text-body-secondary mb-0" data-testid="session-empty">Nessun ticket creato in questa sessione.</p>
+                    <p class="text-body-secondary mb-0" data-testid="session-empty">Ancora nessuna pizza ordinata: com'è possibile?</p>
                 }
                 else
                 {
-                    <ul class="mb-0" data-testid="session-tickets">
-                        @foreach (var ticket in sessionTickets)
+                    <ul class="mb-0" data-testid="session-orders">
+                        @foreach (var order in sessionOrders)
                         {
-                            <li><a href="demo/quickgrid/@ticket.Id">#@ticket.Id</a> @ticket.Title</li>
+                            <li><a href="demo/quickgrid/@order.Id">#@order.Id</a> 🍕 @order.Pizza</li>
                         }
                     </ul>
                 }
@@ -112,10 +118,10 @@
 <ObserveBox>
     <ol class="mb-2">
         <li>Apri gli strumenti di sviluppo, scheda <strong>Network</strong>.</li>
-        <li>Premi <em>Invia ticket</em> con i campi vuoti: gli errori compaiono subito e <strong>nessuna richiesta</strong> parte verso il server (il contatore dei POST non cambia).</li>
+        <li>Premi <em>Ordina</em> con i campi vuoti: gli errori compaiono subito e <strong>nessuna richiesta</strong> parte verso il server (il contatore dei POST non cambia).</li>
         <li>Correggi i campi: i messaggi spariscono mentre scrivi.</li>
-        <li>Invia il form valido: un solo POST, il server rivalida, crea il ticket e fa redirect (Post-Redirect-Get) con un messaggio in <code>TempData</code>.</li>
-        <li>Ricarica la pagina: il messaggio TempData sparisce (letto una volta), l'elenco in <code>Session</code> resta e cresce a ogni ticket.</li>
+        <li>Invia il form valido: un solo POST, il server rivalida, registra l'ordine e fa redirect (Post-Redirect-Get) con un messaggio in <code>TempData</code>.</li>
+        <li>Ricarica la pagina: il messaggio TempData sparisce (letto una volta), l'elenco in <code>Session</code> resta e cresce a ogni pizza.</li>
     </ol>
     <p class="small text-body-secondary mb-2">
         TempData usa di default un cookie cifrato e vale fino alla lettura; Session richiede <code>AddSession()</code> + <code>UseSession()</code>

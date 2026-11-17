@@ -36,14 +36,15 @@ public static class DemoEndpoints
         }
 
         // Demo 6: interrogato periodicamente dall'IHostedService che gira nel browser (WebAssembly).
-        app.MapGet("/api/tickets/stats", (TicketService tickets, DemoInstance instance) =>
+        app.MapGet("/api/kitchen/stats", (OrderService orders, DemoInstance instance) =>
         {
-            var all = tickets.GetAll().ToList();
-            return new TicketStats(
+            var all = orders.GetAll().ToList();
+            var last = all.MaxBy(o => o.Id);
+            return new KitchenStats(
                 Total: all.Count,
-                Open: all.Count(t => t.Status == TicketStatus.Open),
-                Critical: all.Count(t => t.Priority == TicketPriority.Critical && t.Status != TicketStatus.Closed),
-                LastTicketTitle: all.MaxBy(t => t.Id)?.Title,
+                InOven: all.Count(o => o.Status == OrderStatus.InOven),
+                Starving: all.Count(o => o.Hunger == HungerLevel.Starving && o.Status != OrderStatus.Delivered),
+                LastOrder: last is null ? null : $"#{last.Id} · {last.Pizza}",
                 ServerVersion: instance.Version,
                 GeneratedAt: DateTimeOffset.Now);
         });

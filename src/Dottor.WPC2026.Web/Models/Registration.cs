@@ -18,17 +18,17 @@ public sealed class RegistrationModel
     [Display(Name = "Email")]
     public string? Email { get; set; }
 
-    [Required(ErrorMessage = "L'età è obbligatoria.")]
-    [Range(18, 120, ErrorMessage = "L'età deve essere compresa tra 18 e 120 anni.")]
-    [Display(Name = "Età")]
-    public int? Age { get; set; }
+    [Required(ErrorMessage = "Dicci quante pizze mangi al mese (siamo tra amici).")]
+    [Range(1, 30, ErrorMessage = "Tra 1 e 30 pizze al mese: oltre serve un medico, non una tessera.")]
+    [Display(Name = "Pizze al mese")]
+    public int? PizzasPerMonth { get; set; }
 }
 
 /// <summary>
 /// Validazione asincrona nativa di .NET 11: il framework passa il CancellationToken
 /// e lo annulla se il valore cambia prima che il controllo termini.
 /// </summary>
-public sealed class UniqueEmailAttribute() : AsyncValidationAttribute("L'indirizzo {0} è già registrato.")
+public sealed class UniqueEmailAttribute() : AsyncValidationAttribute("L'indirizzo {0} ha già la tessera del Pizza Club.")
 {
     // Il controllo richiede I/O: come indicato dalla documentazione, il percorso sincrono non lo supporta.
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext) =>

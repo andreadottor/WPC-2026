@@ -8,40 +8,40 @@ public partial class StaticSsrValidation
 {
     private static int postCount;
     private string? flashMessage;
-    private int? flashTicketId;
+    private int? flashOrderId;
 
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
 
     [SupplyParameterFromForm]
-    public NewTicketModel? Input { get; set; }
+    public NewOrderModel? Input { get; set; }
 
     // Novità .NET 11: TempData in Static SSR, ideale per i messaggi dopo un redirect.
     [SupplyParameterFromTempData]
     public string? Message { get; set; }
 
     [SupplyParameterFromTempData]
-    public int? CreatedTicketId { get; set; }
+    public int? CreatedOrderId { get; set; }
 
     // Novità .NET 11: valore letto dalla Session e riscritto a fine richiesta (resta fino alla fine della sessione).
-    [SupplyParameterFromSession(Name = "MyTicketIds")]
-    public string? MyTicketIds { get; set; }
+    [SupplyParameterFromSession(Name = "MyOrderIds")]
+    public string? MyOrderIds { get; set; }
 
-    private List<Ticket> sessionTickets = [];
+    private List<Order> sessionOrders = [];
 
     protected override void OnInitialized()
     {
-        Input ??= new NewTicketModel();
+        Input ??= new NewOrderModel();
 
         // Il valore della proprietà viene riscritto in TempData a fine richiesta:
         // lo copiamo e lo azzeriamo, così il messaggio compare una sola volta.
-        (flashMessage, flashTicketId) = (Message, CreatedTicketId);
-        (Message, CreatedTicketId) = (null, null);
+        (flashMessage, flashOrderId) = (Message, CreatedOrderId);
+        (Message, CreatedOrderId) = (null, null);
 
-        sessionTickets = (MyTicketIds ?? "")
+        sessionOrders = (MyOrderIds ?? "")
             .Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Select(id => int.TryParse(id, out var value) ? Tickets.GetById(value) : null)
-            .OfType<Ticket>()
+            .Select(id => int.TryParse(id, out var value) ? Orders.GetById(value) : null)
+            .OfType<Order>()
             .ToList();
 
         if (HttpMethods.IsPost(HttpContext?.Request.Method ?? ""))
@@ -50,12 +50,12 @@ public partial class StaticSsrValidation
         }
     }
 
-    private void CreateTicket()
+    private void PlaceOrder()
     {
-        var ticket = Tickets.Create(Input!);
-        Message = $"Ticket #{ticket.Id} \"{ticket.Title}\" creato con priorità {ticket.Priority.ToDisplayName()}.";
-        CreatedTicketId = ticket.Id;
-        MyTicketIds = string.IsNullOrEmpty(MyTicketIds) ? $"{ticket.Id}" : $"{MyTicketIds},{ticket.Id}";
+        var order = Orders.Create(Input!);
+        Message = $"Ordine #{order.Id} ricevuto: una {order.Pizza} sta per entrare in forno 🔥 (livello di fame: {order.Hunger.ToDisplayName()}).";
+        CreatedOrderId = order.Id;
+        MyOrderIds = string.IsNullOrEmpty(MyOrderIds) ? $"{order.Id}" : $"{MyOrderIds},{order.Id}";
         Navigation.NavigateTo("demo/static-ssr-validation");
     }
 }

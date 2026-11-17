@@ -1,7 +1,7 @@
 # WPC 2026 – Le novità di Blazor in .NET 11
 
 Demo della sessione **"Blazor .NET 11"** di WPC 2026 (45 minuti). Ogni pagina mostra una novità di Blazor
-in .NET 11 con un esempio realistico, piccolo e facile da spiegare dal vivo (dominio: ticket e documenti di progetto).
+in .NET 11 con un esempio realistico, piccolo e facile da spiegare dal vivo (dominio: 🍕 la pizzeria **"Blazor da Asporto"**: ordini, cucina, rider, menu e pizza del mese).
 
 La soluzione `Dottor.WPC2026.slnx` contiene tre progetti:
 
@@ -98,30 +98,30 @@ la nuova istanza, la pagina no: dopo l'arresto riavvia l'app a mano. Il pulsante
 Prima della sessione: `dotnet build`, avvia l'app con il profilo `https`, apri la homepage e verifica il
 badge AI con il nome del modello (la chiave API è configurata) e fai una domanda di prova nella demo 9.
 
-1. **Circuit pause** – Incrementa il contatore e scrivi titolo/descrizione del ticket. Esegui
+1. **Circuit pause** – Aggiungi qualche pizza al carrello e scrivi indirizzo/note dell'ordine. Esegui
    `pwsh ./scripts/deploy-demo.ps1`. *Atteso:* compare il modal di pausa, poi la sessione riprende da sola;
-   versione e PID cambiano, contatore e bozza sono intatti e compare il messaggio "Stato ripristinato!".
+   versione e PID cambiano, carrello e ordine sono intatti e compare il messaggio "Stato ripristinato!".
    Poi premi `Blazor.pauseCircuit()` e *Riprendi*; infine nascondi la scheda per più di 10 secondi (AutoPause, `AutoPause:HiddenDelay`).
-2. **Validazione asincrona** – Digita `mario.rossi@example.com` (già registrata), `errore@example.com`
+2. **Validazione asincrona (Pizza Club)** – Digita `mario.rossi@example.com` (ha già la tessera), `errore@example.com`
    (errore del servizio) e un'email libera.
    *Atteso:* indicatore "verifica in corso", poi il messaggio corretto; il submit attende la validazione.
-3. **Static SSR** – Invia il form vuoto, poi un ticket valido (due volte). *Atteso:* errori di validazione senza circuit;
-   dopo l'invio redirect (PRG), messaggio TempData mostrato una sola volta e l'elenco "I tuoi ticket in questa sessione" che cresce.
-4. **CacheView** – Ricarica la pagina, cambia categoria, prova "software + utm".
-   *Atteso:* il report in cache non cambia numero di generazione per 20 secondi; `utm` non crea una nuova voce.
+3. **Static SSR** – Invia il form vuoto, poi un ordine valido (due volte). *Atteso:* errori di validazione senza circuit;
+   dopo l'invio redirect (PRG), messaggio TempData mostrato una sola volta e l'elenco degli ordini della sessione che cresce.
+4. **CacheView** – Ricarica la pagina, passa da "classiche" a "speciali", prova "speciali + utm".
+   *Atteso:* il menu in cache non cambia numero di generazione per 20 secondi; `utm` non crea una nuova voce.
 5. **Web Worker** – Attendi "pronto", poi analizza sul thread della UI e nel Web Worker.
-   *Atteso:* nel primo caso pallina e orologio si bloccano, nel secondo restano fluidi.
-6. **IHostedService** – Osserva il contatore degli aggiornamenti, crea un ticket nella demo 3, cambia pagina e torna.
+   *Atteso:* nel primo caso la pizza che rotola e l'orologio si bloccano, nel secondo restano fluidi.
+6. **IHostedService** – Osserva il monitor della cucina, crea un ordine nella demo 3, cambia pagina e torna.
    *Atteso:* il totale si aggiorna; il servizio non riparte (orario di avvio invariato).
 7. **Virtualize** – Cambia `AnchorMode`, premi "Flusso in cima", inserisci un indice e premi "Vai". Avvia il log viewer.
    *Atteso:* la posizione resta stabile quando arrivano nuovi elementi; il log resta ancorato in fondo.
-8. **QuickGrid** – Ordina per priorità, cambia pagina, clicca una riga e torna indietro.
+8. **QuickGrid** – Ordina per fame, cambia pagina, clicca una riga e torna indietro.
    *Atteso:* `sort`, `direction` e `page` nell'URL; i pulsanti Indietro/Avanti del browser ripristinano la griglia.
-9. **Chat minimale** – Chiedi "Cosa c'è di nuovo in Blazor .NET 11?" e mostra il codice della pagina (`MinimalChat.razor`).
+9. **Chat minimale** – Chiedi al pizzaiolo virtuale "Cosa c'è di nuovo in Blazor .NET 11?" (e cosa pensa dell'ananas) e mostra il codice della pagina (`MinimalChat.razor`).
    *Atteso:* risposta in streaming, cronologia mantenuta, pulsante per fermare la generazione.
-10. **Agentic UI** – Usa i suggerimenti: "Rendi la descrizione più tecnica" (diff + Accetta/Rifiuta),
-   "Riassumi il documento" (card del tool server), "Pubblica il documento" (approvazione).
-   *Atteso:* il documento cambia solo dopo "Accetta"; la pubblicazione avviene solo dopo "Approva".
+10. **Agentic UI** – Usa i suggerimenti: "Rendi la descrizione più golosa" (diff + Accetta/Rifiuta),
+   "Riassumi la scheda" (card del tool server), "Aggiungi la pizza al menu a 9,50 €" (approvazione).
+   *Atteso:* la scheda cambia solo dopo "Accetta"; la pizza entra nel menu solo dopo "Approva".
 11. **Altre novità** – Mostra `DisplayName`, `EnvironmentView`, le opzioni del browser lette dal server (inclusa AutoPause)
     e la nota sull'antiforgery.
 

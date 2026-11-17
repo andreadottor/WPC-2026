@@ -73,7 +73,7 @@ public partial class VirtualizeDemo
     }
 
     private TimelineEvent NewEvent() =>
-        TimelineEventGenerator.Create(events.Max(e => e.Id) + 1, DateTime.Now, random) with { Title = "Nuovo evento" };
+        TimelineEventGenerator.Create(events.Max(e => e.Id) + 1, DateTime.Now, random) with { Title = "Nuovo ordine in arrivo 🍕" };
 
     private void ToggleLiveFeed()
     {
@@ -99,9 +99,9 @@ public partial class VirtualizeDemo
         var roll = random.Next(10);
         var (level, text) = roll switch
         {
-            0 => ("error", $"ERR  Richiesta {logCounter} fallita: TimeoutException\n     at Orders.Process()\n     at Pipeline.Run()"),
-            1 or 2 => ("warn", $"WARN Richiesta {logCounter} lenta: {random.Next(800, 3000)} ms"),
-            _ => ("info", $"INFO Richiesta {logCounter} completata in {random.Next(5, 200)} ms")
+            0 => ("error", $"ERR  Consegna {logCounter} in ritardo: RiderLostException\n     at Navigator.FindAddress()\n     at Delivery.Run()"),
+            1 or 2 => ("warn", $"WARN Consegna {logCounter}: traffico, +{random.Next(3, 15)} minuti"),
+            _ => ("info", $"INFO Consegna {logCounter} completata in {random.Next(8, 30)} minuti 🍕")
         };
         logLines.Add(new LogLine(logCounter, level, $"{DateTime.Now:HH:mm:ss.fff} {text}"));
     }

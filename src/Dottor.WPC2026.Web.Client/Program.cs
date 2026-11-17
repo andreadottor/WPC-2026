@@ -7,7 +7,7 @@ builder.Services.AddSingleton(new HttpClient { BaseAddress = new Uri(builder.Hos
 
 // Demo 6, novità .NET 11: IHostedService anche in Blazor WebAssembly.
 // Il servizio parte con il runtime WebAssembly e vive finché la scheda resta aperta.
-builder.Services.AddSingleton<TicketStatsMonitor>();
-builder.Services.AddHostedService(services => services.GetRequiredService<TicketStatsMonitor>());
+builder.Services.AddSingleton<KitchenMonitor>();
+builder.Services.AddHostedService(services => services.GetRequiredService<KitchenMonitor>());
 
 await builder.Build().RunAsync();
