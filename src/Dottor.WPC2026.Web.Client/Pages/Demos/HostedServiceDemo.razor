@@ -78,13 +78,3 @@ class TicketStatsMonitor : BackgroundService { … }</pre>
         La pagina disattiva il prerendering perché il servizio esiste solo nel browser.
     </p>
 </ObserveBox>
-
-@code {
-    private readonly DateTimeOffset componentCreatedAt = DateTimeOffset.Now;
-
-    protected override void OnInitialized() => Monitor.Changed += OnMonitorChanged;
-
-    private void OnMonitorChanged() => _ = InvokeAsync(StateHasChanged);
-
-    public void Dispose() => Monitor.Changed -= OnMonitorChanged;
-}

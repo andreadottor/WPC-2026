@@ -52,11 +52,3 @@
         </nav>
     </div>
 </nav-menu>
-
-@code {
-    private static (string? Number, string Name) SplitChapter(string chapter)
-    {
-        var parts = chapter.Split(" · ", 2);
-        return parts.Length == 2 ? (parts[0], parts[1]) : (null, chapter);
-    }
-}

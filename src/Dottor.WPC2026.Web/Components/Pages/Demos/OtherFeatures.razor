@@ -125,19 +125,3 @@ Navigation.GetUriWithFragment("browser-options")</pre>
 <ObserveBox>
     Tutti gli esempi di questa pagina funzionano in <strong>static SSR</strong>: nessun circuit e nessun WebAssembly.
 </ObserveBox>
-
-@code {
-    private readonly NewTicketModel sample = new();
-    private BrowserOptions? browserOptions;
-
-    [CascadingParameter]
-    public HttpContext? HttpContext { get; set; }
-
-    protected override void OnInitialized()
-    {
-        if (HttpContext is not null)
-        {
-            browserOptions = BrowserOptions.GetBrowserOptions(HttpContext);
-        }
-    }
-}

@@ -13,15 +13,3 @@
 <div class="minimal-chat border rounded-3 shadow-sm">
     <ChatPage Agent="agent" Placeholder="Chiedi qualcosa su Blazor .NET 11…" />
 </div>
-
-@code {
-    private UIAgent agent = default!;
-
-    protected override void OnInitialized() =>
-        agent = new UIAgent(ChatClient, new ChatOptions
-        {
-            Instructions = "Sei un esperto di Blazor e .NET 11. Rispondi in italiano, in modo breve e concreto."
-        });
-
-    public void Dispose() => agent.Dispose();
-}

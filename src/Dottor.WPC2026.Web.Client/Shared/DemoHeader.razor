@@ -9,9 +9,3 @@
     <h1 class="h2 mb-2">@Title</h1>
     <p class="lead mb-0">@ChildContent</p>
 </div>
-
-@code {
-    [Parameter, EditorRequired] public string Title { get; set; } = "";
-    [Parameter] public int? Number { get; set; }
-    [Parameter] public RenderFragment? ChildContent { get; set; }
-}

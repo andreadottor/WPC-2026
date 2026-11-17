@@ -139,27 +139,3 @@
         bruscamente, lo stato non raggiunge il browser. Su più server le chiavi di Data Protection devono essere condivise.
     </p>
 </ObserveBox>
-
-@code {
-    private readonly DateTimeOffset componentCreatedAt = DateTimeOffset.Now;
-
-    [PersistentState]
-    public int Count { get; set; }
-
-    [PersistentState]
-    public TicketDraft? Ticket { get; set; }
-
-    // Memorizza quale processo ha creato lo stato: dopo il deploy è diverso da quello corrente.
-    [PersistentState]
-    public int? OriginalProcessId { get; set; }
-
-    [PersistentState]
-    public string? OriginalVersion { get; set; }
-
-    protected override void OnInitialized()
-    {
-        Ticket ??= new TicketDraft();
-        OriginalProcessId ??= Instance.ProcessId;
-        OriginalVersion ??= Instance.Version;
-    }
-}
