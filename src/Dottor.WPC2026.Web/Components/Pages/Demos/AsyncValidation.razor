@@ -137,17 +137,3 @@
         </div>
     </div>
 </div>
-
-<ObserveBox>
-    <ol class="mb-2">
-        <li>Lascia vuoto il nome o dichiara 45 pizze al mese: l'errore compare <strong>subito</strong> (regola sincrona).</li>
-        <li>Scrivi <code>mario.rossi@example.com</code> ed esci dal campo: parte lo spinner per ~800 ms, poi l'errore "ha già la tessera".</li>
-        <li>Modifica di nuovo l'email prima che finisca: il controllo precedente viene <strong>annullato</strong> (vedi registro e log del server).</li>
-        <li>Correggi in <code>nuovo@example.com</code>: compare "Disponibile" e il pulsante si riabilita.</li>
-        <li>Prova <code>errore@example.com</code> per vedere lo stato <em>faulted</em>.</li>
-    </ol>
-    <p class="small text-body-secondary mb-0">
-        Per regole che coinvolgono più proprietà si può implementare <code>IAsyncValidatableObject</code> sul modello:
-        il <code>DataAnnotationsValidator</code> la esegue al submit, senza infrastruttura aggiuntiva.
-    </p>
-</ObserveBox>

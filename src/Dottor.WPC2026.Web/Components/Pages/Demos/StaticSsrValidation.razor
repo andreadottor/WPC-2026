@@ -114,21 +114,3 @@
         </div>
     </div>
 </div>
-
-<ObserveBox>
-    <ol class="mb-2">
-        <li>Apri gli strumenti di sviluppo, scheda <strong>Network</strong>.</li>
-        <li>Premi <em>Ordina</em> con i campi vuoti: gli errori compaiono subito e <strong>nessuna richiesta</strong> parte verso il server (il contatore dei POST non cambia).</li>
-        <li>Correggi i campi: i messaggi spariscono mentre scrivi.</li>
-        <li>Invia il form valido: un solo POST, il server rivalida, registra l'ordine e fa redirect (Post-Redirect-Get) con un messaggio in <code>TempData</code>.</li>
-        <li>Ricarica la pagina: il messaggio TempData sparisce (letto una volta), l'elenco in <code>Session</code> resta e cresce a ogni pizza.</li>
-    </ol>
-    <p class="small text-body-secondary mb-2">
-        TempData usa di default un cookie cifrato e vale fino alla lettura; Session richiede <code>AddSession()</code> + <code>UseSession()</code>
-        e vale per tutta la sessione del browser. Entrambi funzionano solo in Static SSR, dove esiste l'<code>HttpContext</code>.
-    </p>
-    <p class="small text-body-secondary mb-0">
-        La validazione lato server resta la fonte di verità: con JavaScript disabilitato il form funziona comunque.
-        Sono supportati gli attributi DataAnnotations standard (Required, StringLength, MinLength, EmailAddress, Range, ecc.).
-    </p>
-</ObserveBox>

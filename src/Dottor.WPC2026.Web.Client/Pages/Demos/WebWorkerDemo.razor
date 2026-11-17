@@ -101,16 +101,3 @@
         </div>
     </div>
 </div>
-
-<ObserveBox>
-    <ol class="mb-2">
-        <li>Premi <em>Analizza sul thread della UI</em>: la pizza smette di girare, l'orologio si ferma e non puoi scrivere nel campo di testo finché il calcolo non termina.</li>
-        <li>Premi <em>Analizza nel Web Worker</em>: stesso codice C#, stesso risultato, ma la pagina resta fluida.</li>
-        <li>Il worker parte una volta sola (<code>WebWorkerClient.CreateAsync</code>) e carica il suo runtime .NET: guarda lo stato "pronto".</li>
-    </ol>
-    <p class="small text-body-secondary mb-0">
-        <code>[JSExport]</code> accetta solo tipi semplici: il CSV entra come stringa e il risultato torna come JSON.
-        Il <code>CancellationToken</code> interrompe l'attesa, non il calcolo già avviato nel worker.
-        In una Blazor Web App il lavoro pesante di solito si fa sul server: il Web Worker serve quando il calcolo deve restare nel browser.
-    </p>
-</ObserveBox>

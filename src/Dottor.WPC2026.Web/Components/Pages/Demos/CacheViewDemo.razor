@@ -39,39 +39,3 @@ else
         </div>
     </div>
 }
-
-<div class="card mt-4">
-    <div class="card-header fw-semibold">Più <code>CacheView</code> nello stesso componente: <code>CacheKey</code></div>
-    <div class="card-body">
-        <div class="row row-cols-1 row-cols-md-2 g-3 mb-3">
-            @foreach (var category in MenuService.Categories)
-            {
-                <div class="col">
-                    @* In un ciclo le istanze hanno lo stesso antenato: CacheKey le distingue. *@
-                    <CacheView CacheKey="@category" ExpiresAfter="CacheDuration">
-                        <div class="border rounded p-2">
-                            <strong>@category</strong> · riepilogo renderizzato alle
-                            <span class="font-monospace" data-testid="@($"summary-{category}")">@DateTime.Now.ToString("HH:mm:ss.fff")</span>
-                        </div>
-                    </CacheView>
-                </div>
-            }
-        </div>
-        <pre class="small bg-body-tertiary p-2 mb-0">@@foreach (var category in categories)
-{
-    &lt;CacheView CacheKey="@@category" ExpiresAfter="TimeSpan.FromSeconds(20)"&gt;…&lt;/CacheView&gt;
-}</pre>
-    </div>
-</div>
-
-<ObserveBox>
-    <ol class="mb-2">
-        <li>Ricarica la pagina: il menu "Senza cache" aumenta il numero di generazione, quello dentro <code>CacheView</code> no (per 20 secondi).</li>
-        <li>Passa da <em>classiche</em> a <em>speciali</em>: <code>VaryByQuery="category"</code> crea una voce di cache per categoria.</li>
-        <li>Prova <em>speciali + utm</em>: il parametro <code>utm</code> non fa parte della chiave, quindi riusa la stessa voce.</li>
-    </ol>
-    <p class="small text-body-secondary mb-0">
-        Funziona solo in Static SSR (non è una cache per componenti interattivi) e la cache è condivisa tra gli utenti:
-        per dati personali usa <code>VaryByUser</code> o <code>VaryByCookie</code>. Le chiavi con valori arbitrari vanno limitate.
-    </p>
-</ObserveBox>

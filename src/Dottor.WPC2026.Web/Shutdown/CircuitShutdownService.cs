@@ -16,12 +16,10 @@ public sealed class CircuitShutdownService
 
     public int ActiveCircuitCount => _circuits.Count;
 
-    public IReadOnlyList<ActiveCircuit> ActiveCircuits =>
-        _circuits.Values.OrderBy(c => c.ConnectedAt).ToList();
+    public IReadOnlyList<ActiveCircuit> ActiveCircuits => _circuits.Values.OrderBy(c => c.ConnectedAt).ToList();
 
     // Circuiti con la connessione caduta ma ancora tenuti in memoria dal server (DisconnectedCircuitRetentionPeriod).
-    public IReadOnlyList<DisconnectedCircuit> DisconnectedCircuits =>
-        _disconnected.Values.OrderBy(c => c.DisconnectedAt).ToList();
+    public IReadOnlyList<DisconnectedCircuit> DisconnectedCircuits => _disconnected.Values.OrderBy(c => c.DisconnectedAt).ToList();
 
     public event Action? CircuitsChanged;
 

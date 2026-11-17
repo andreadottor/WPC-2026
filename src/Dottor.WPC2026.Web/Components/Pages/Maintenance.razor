@@ -153,11 +153,6 @@
         <div class="card border-danger">
             <div class="card-header fw-semibold text-danger">Abbassa la serranda</div>
             <div class="card-body">
-                <p>
-                    Chiama <code>IHostApplicationLifetime.StopApplication()</code>: parte lo stesso shutdown dello
-                    script di deploy. Prima di chiudere, il server mette in pausa tutti i circuiti, che salvano lo stato nel browser.
-                </p>
-
                 @if (!Environment.IsDevelopment())
                 {
                     <div class="alert alert-warning mb-0">L'arresto dalla UI è abilitato solo in ambiente Development.</div>
@@ -185,21 +180,5 @@
             </div>
         </div>
 
-        <div class="card mt-4">
-            <div class="card-header fw-semibold">Come funziona</div>
-            <div class="card-body small">
-<pre class="mb-3"><code>ThreadPool.QueueUserWorkItem(
-    _ => lifetime.StopApplication());</code></pre>
-                <ul class="mb-0">
-                    <li>
-                        <code>StopApplication()</code> esegue subito le callback di <code>ApplicationStopping</code>, che aspettano
-                        la pausa dei circuiti, compreso quello di questa pagina. Per questo la chiamata parte da un thread del pool
-                        e non dal thread del circuito.
-                    </li>
-                    <li>Quando il processo si ferma, compare la modale di riconnessione. Non c'è uno script che avvii la v2: riavvia l'app a mano (F5 o <code>dotnet run</code>).</li>
-                    <li>In produzione la nuova istanza la avvia l'orchestratore (App Service, Kubernetes, IIS...).</li>
-                </ul>
-            </div>
-        </div>
     </div>
 </div>

@@ -37,16 +37,3 @@
     </QuickGrid>
 </div>
 <Paginator State="_pagination" />
-
-<ObserveBox>
-    <ol class="mb-2">
-        <li>Vai alla pagina 3 e ordina per <em>Fame</em>: la URL diventa <code>?page=…&amp;sort=Fame&amp;direction=…</code>.</li>
-        <li>Usa i pulsanti Indietro/Avanti del browser: la griglia segue la URL.</li>
-        <li>Apri la URL in un'altra scheda: stessa pagina, stesso ordinamento.</li>
-        <li>Clicca una riga: <code>OnRowClick</code> apre il dettaglio dell'ordine; il link di ritorno riporta alla stessa vista.</li>
-    </ol>
-    <p class="small text-body-secondary mb-0">
-        Il parametro <code>sort</code> usa il <code>Title</code> della colonna: rinominarlo rompe i link salvati.
-        Con più griglie nella stessa pagina usare <code>QueryParameterNameOptions</code> con un prefisso diverso.
-    </p>
-</ObserveBox>
