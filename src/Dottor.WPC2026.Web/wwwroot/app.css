@@ -73,6 +73,16 @@ h1:focus {
     font-weight: 600;
 }
 
+.demo-nav-chapter {
+    margin-top: .75rem;
+    padding-top: .25rem;
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, .55);
+}
+
 .demo-card {
     transition: transform .12s ease, box-shadow .12s ease;
 }
@@ -92,7 +102,7 @@ h1:focus {
     word-break: break-all;
 }
 
-/* Demo 4: Virtualize */
+/* Demo 7: Virtualize */
 .virtualize-container {
     height: 460px;
     overflow-y: auto;
@@ -126,7 +136,7 @@ h1:focus {
 .log-line.level-warn { color: #dcdcaa; }
 .log-line.level-error { color: #f48771; }
 
-/* Demo 5: QuickGrid */
+/* Demo 8: QuickGrid */
 .quickgrid-container table {
     width: 100%;
 }
@@ -144,7 +154,7 @@ h1:focus {
     border-bottom: 1px solid var(--bs-border-color-translucent);
 }
 
-/* Demo 6: Agentic UI */
+/* Demo 9: Agentic UI */
 .agentic-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -182,4 +192,26 @@ h1:focus {
 .diff del {
     background: #fbd5d5;
     color: #842029;
+}
+
+/* Demo 5: Web Worker (l'animazione usa margin-left, quindi gira sul thread principale e si blocca con esso) */
+.ww-track {
+    position: relative;
+    height: 1.5rem;
+    border-radius: .75rem;
+    background: var(--bs-tertiary-bg, #f1f3f5);
+    overflow: hidden;
+}
+
+.ww-ball {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background: var(--bs-primary, #0d6efd);
+    animation: ww-move 2s ease-in-out infinite alternate;
+}
+
+@keyframes ww-move {
+    from { margin-left: 0; }
+    to { margin-left: calc(100% - 1.5rem); }
 }

@@ -4,11 +4,12 @@
 
 @* Nessun @rendermode: la pagina è renderizzata in Static SSR, senza circuito e senza WebAssembly. *@
 
-<PageTitle>Demo 3 · Validazione client in Static SSR</PageTitle>
+<PageTitle>Demo 3 · Validazione client, TempData e Session in Static SSR</PageTitle>
 
-<DemoHeader Number="3" Title="Validazione client-side in Static SSR">
+<DemoHeader Number="3" Title="Validazione client-side, TempData e Session in Static SSR">
     Il server rende i metadati delle regole DataAnnotations e lo script di Blazor li applica nel browser:
     errori immediati senza circuito, senza WebAssembly e senza JavaScript scritto a mano.
+    Dopo l'invio, <code>[SupplyParameterFromTempData]</code> e <code>[SupplyParameterFromSession]</code> portano i dati oltre il redirect.
 </DemoHeader>
 
 @if (flashMessage is not null)
@@ -86,6 +87,25 @@
                 </dl>
             </div>
         </div>
+
+        <div class="card mt-4">
+            <div class="card-header fw-semibold">I tuoi ticket in questa sessione <span class="badge text-bg-light border">Session</span></div>
+            <div class="card-body">
+                @if (sessionTickets.Count == 0)
+                {
+                    <p class="text-body-secondary mb-0" data-testid="session-empty">Nessun ticket creato in questa sessione.</p>
+                }
+                else
+                {
+                    <ul class="mb-0" data-testid="session-tickets">
+                        @foreach (var ticket in sessionTickets)
+                        {
+                            <li><a href="demo/quickgrid/@ticket.Id">#@ticket.Id</a> @ticket.Title</li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
     </div>
 </div>
 
@@ -95,7 +115,12 @@
         <li>Premi <em>Invia ticket</em> con i campi vuoti: gli errori compaiono subito e <strong>nessuna richiesta</strong> parte verso il server (il contatore dei POST non cambia).</li>
         <li>Correggi i campi: i messaggi spariscono mentre scrivi.</li>
         <li>Invia il form valido: un solo POST, il server rivalida, crea il ticket e fa redirect (Post-Redirect-Get) con un messaggio in <code>TempData</code>.</li>
+        <li>Ricarica la pagina: il messaggio TempData sparisce (letto una volta), l'elenco in <code>Session</code> resta e cresce a ogni ticket.</li>
     </ol>
+    <p class="small text-body-secondary mb-2">
+        TempData usa di default un cookie cifrato e vale fino alla lettura; Session richiede <code>AddSession()</code> + <code>UseSession()</code>
+        e vale per tutta la sessione del browser. Entrambi funzionano solo in Static SSR, dove esiste l'<code>HttpContext</code>.
+    </p>
     <p class="small text-body-secondary mb-0">
         La validazione lato server resta la fonte di verità: con JavaScript disabilitato il form funziona comunque.
         Sono supportati gli attributi DataAnnotations standard (Required, StringLength, MinLength, EmailAddress, Range, ecc.).
@@ -120,6 +145,12 @@
     [SupplyParameterFromTempData]
     public int? CreatedTicketId { get; set; }
 
+    // Novità .NET 11: valore letto dalla Session e riscritto a fine richiesta (resta fino alla fine della sessione).
+    [SupplyParameterFromSession(Name = "MyTicketIds")]
+    public string? MyTicketIds { get; set; }
+
+    private List<Ticket> sessionTickets = [];
+
     protected override void OnInitialized()
     {
         Input ??= new NewTicketModel();
@@ -128,6 +159,12 @@
         // lo copiamo e lo azzeriamo, così il messaggio compare una sola volta.
         (flashMessage, flashTicketId) = (Message, CreatedTicketId);
         (Message, CreatedTicketId) = (null, null);
+
+        sessionTickets = (MyTicketIds ?? "")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(id => int.TryParse(id, out var value) ? Tickets.GetById(value) : null)
+            .OfType<Ticket>()
+            .ToList();
 
         if (HttpMethods.IsPost(HttpContext?.Request.Method ?? ""))
         {
@@ -140,6 +177,7 @@
         var ticket = Tickets.Create(Input!);
         Message = $"Ticket #{ticket.Id} \"{ticket.Title}\" creato con priorità {ticket.Priority.ToDisplayName()}.";
         CreatedTicketId = ticket.Id;
+        MyTicketIds = string.IsNullOrEmpty(MyTicketIds) ? $"{ticket.Id}" : $"{MyTicketIds},{ticket.Id}";
         Navigation.NavigateTo("demo/static-ssr-validation");
     }
 }

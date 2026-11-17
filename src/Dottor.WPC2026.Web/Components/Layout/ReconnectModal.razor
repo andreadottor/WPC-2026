@@ -7,26 +7,30 @@
             <div></div>
         </div>
         <p class="components-reconnect-first-attempt-visible">
-            Riconnessione al server in corso...
+            Connessione interrotta. Riconnessione al server...
         </p>
         <p class="components-reconnect-repeated-attempt-visible">
-            Riconnessione non riuscita... nuovo tentativo tra <span id="components-seconds-to-next-attempt"></span> secondi.
+            Nuovo tentativo tra <span id="components-seconds-to-next-attempt"></span> secondi.
         </p>
         <p class="components-reconnect-failed-visible">
-            Impossibile riconnettersi.<br />Riprova o ricarica la pagina.
+            Riconnessione non riuscita. Riprova senza ricaricare per conservare lo stato disponibile.
         </p>
         <button id="components-reconnect-button" class="components-reconnect-failed-visible">
             Riprova
         </button>
-        <p class="components-pause-visible">
-            La sessione è stata messa in pausa dal server.<br />
-            <small id="components-auto-resume-status">Riprenderà automaticamente appena il server sarà disponibile.</small>
+        <p class="components-server-pause-visible">
+            Sessione sospesa dal server. Attendo la nuova istanza per riprendere automaticamente...
+        </p>
+        <p class="components-client-pause-visible">
+            Sessione sospesa dal browser (scheda nascosta o <code>Blazor.pauseCircuit()</code>). Riprende quando la scheda torna visibile o premendo Riprendi.
         </p>
         <p class="components-resume-failed-visible">
-            Impossibile riprendere la sessione.<br />Riprova o ricarica la pagina.
+            Ripresa non riuscita. Attendo il server; puoi anche riprovare manualmente.
         </p>
         <button id="components-resume-button" class="components-pause-visible components-resume-failed-visible">
             Riprendi
         </button>
+        <hr />
+        <p id="resume-diagnostic" role="status"></p>
     </div>
 </dialog>

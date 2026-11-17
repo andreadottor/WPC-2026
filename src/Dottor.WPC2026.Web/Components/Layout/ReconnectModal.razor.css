@@ -2,6 +2,8 @@
 .components-reconnect-repeated-attempt-visible,
 .components-reconnect-failed-visible,
 .components-pause-visible,
+.components-server-pause-visible,
+.components-client-pause-visible,
 .components-resume-failed-visible,
 .components-rejoining-animation {
     display: none;
@@ -10,6 +12,8 @@
 #components-reconnect-modal.components-reconnect-show .components-reconnect-first-attempt-visible,
 #components-reconnect-modal.components-reconnect-show .components-rejoining-animation,
 #components-reconnect-modal.components-reconnect-paused .components-pause-visible,
+#components-reconnect-modal.components-reconnect-paused:not([data-pause-origin="client"]) .components-server-pause-visible,
+#components-reconnect-modal.components-reconnect-paused[data-pause-origin="client"] .components-client-pause-visible,
 #components-reconnect-modal.components-reconnect-resume-failed .components-resume-failed-visible,
 #components-reconnect-modal.components-reconnect-retrying,
 #components-reconnect-modal.components-reconnect-retrying .components-reconnect-repeated-attempt-visible,
