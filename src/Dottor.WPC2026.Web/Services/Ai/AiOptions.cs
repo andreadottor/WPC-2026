@@ -27,18 +27,23 @@ public static class AiServiceCollectionExtensions
 {
     /// <summary>
     /// Registra l'IChatClient (Microsoft.Extensions.AI) usato dalle demo AI:
-    /// client OpenAI puntato sull'endpoint v1 di Microsoft Foundry.
+    /// client OpenAI (Responses API) puntato sull'endpoint v1 di Microsoft Foundry.
     /// </summary>
     public static IServiceCollection AddFoundryChatClient(this IServiceCollection services, IConfiguration configuration)
     {
         var options = configuration.GetSection("AI").Get<AiOptions>() ?? new AiOptions();
         services.AddSingleton(options);
 
+        // Responses API (/v1/responses): gpt-6.1-sol non accetta function tool con il reasoning su
+        // /v1/chat/completions, e non supporta reasoning_effort = none.
+        // OPENAI001: API ancora marcata come sperimentale nell'SDK OpenAI.
+#pragma warning disable OPENAI001
         IChatClient innerClient = options.IsConfigured
             ? new OpenAIClient(new ApiKeyCredential(options.ApiKey!), new OpenAIClientOptions { Endpoint = new Uri(options.Endpoint) })
-                .GetChatClient(options.Model)
-                .AsIChatClient()
+                .GetResponsesClient()
+                .AsIChatClient(options.Model)
             : new MissingApiKeyChatClient();
+#pragma warning restore OPENAI001
 
         // UseFunctionInvocation esegue i tool server-side e gestisce le richieste di approvazione
         // (ApprovalRequiredAIFunction). Le UI action registrate su UIAgent sono solo dichiarazioni

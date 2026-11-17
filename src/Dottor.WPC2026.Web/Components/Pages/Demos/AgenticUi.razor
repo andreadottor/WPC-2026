@@ -48,6 +48,7 @@
                 "Il documento corrente è fornito in JSON in un messaggio di sistema. " +
                 "Per QUALSIASI modifica al documento chiama sempre il tool propose_document passando il documento COMPLETO aggiornato " +
                 "(titolo, descrizione e tutte le sezioni): l'utente vedrà l'anteprima e deciderà se accettarla. Non riscrivere il documento nel testo della risposta. " +
+                "Quando ricevi l'esito di propose_document (ACCEPTED o REJECTED) la richiesta è conclusa: conferma in una frase e NON chiamare di nuovo propose_document. " +
                 "Per riassunti o statistiche chiama analyze_document. Per pubblicare chiama publish_document. " +
                 "Rispondi in italiano con frasi brevi.",
             Tools =
@@ -87,7 +88,7 @@
         if (isAccepted)
         {
             agent.State.AcceptPredictiveState();
-            return "ACCEPTED: l'utente ha accettato la proposta, ora il documento è aggiornato. Conferma brevemente.";
+            return "ACCEPTED: l'utente ha accettato la proposta, ora il documento è aggiornato. Richiesta conclusa: conferma brevemente senza chiamare altri tool.";
         }
 
         agent.State.RejectPredictiveState();
