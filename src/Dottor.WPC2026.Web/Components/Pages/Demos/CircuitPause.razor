@@ -1,8 +1,9 @@
 @page "/demo/circuit-pause"
 @rendermode InteractiveServer
-@inject AppInstanceInfo Instance
-@inject ShutdownCircuitHandler CircuitInfo
-@inject CircuitShutdownService ShutdownService
+@using Microsoft.Extensions.Options
+@inject DemoInstance Instance
+@inject ShutdownCircuitHandler Connection
+@inject IOptions<AutoPauseDemoOptions> AutoPauseOptions
 
 <PageTitle>Demo 1 · Pausa e ripresa del circuito</PageTitle>
 
@@ -67,17 +68,45 @@
                     <dd class="col-7"><span class="badge text-bg-primary fs-6" data-testid="version">@Instance.Version</span></dd>
                     <dt class="col-5">Process ID</dt>
                     <dd class="col-7" data-testid="pid">@Instance.ProcessId</dd>
-                    <dt class="col-5">Avviata alle</dt>
-                    <dd class="col-7">@Instance.StartedAt.ToLocalTime().ToString("HH:mm:ss")</dd>
                     <dt class="col-5">Circuit Id</dt>
-                    <dd class="col-7"><small>@(CircuitInfo.CircuitId ?? "— (prerendering)")</small></dd>
-                    <dt class="col-5">Circuit connessi</dt>
-                    <dd class="col-7">@ShutdownService.ConnectedCircuits</dd>
-                    <dt class="col-5">Renderer</dt>
-                    <dd class="col-7">@RendererInfo.Name (interattivo: @RendererInfo.IsInteractive)</dd>
+                    <dd class="col-7"><small class="text-break">@(Connection.CircuitId ?? "— (prerendering)")</small></dd>
+                    <dt class="col-5">Connessione</dt>
+                    <dd class="col-7" data-testid="connection">@(Connection.IsConnected ? "connesso (Interactive Server)" : "prerendering: interattività in avvio")</dd>
+                    <dt class="col-5">Componente creato alle</dt>
+                    <dd class="col-7">@componentCreatedAt.ToString("HH:mm:ss") <small class="text-body-secondary d-block">campo non persistito: cambia a ogni ripresa</small></dd>
                     <dt class="col-5">Stato creato da</dt>
                     <dd class="col-7">PID @OriginalProcessId · @OriginalVersion</dd>
                 </dl>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header fw-semibold">Pausa dal browser <span class="badge text-bg-light border">.NET 10</span></div>
+            <div class="card-body">
+                <p class="small mb-2">Il client può sospendere il circuito e riprenderlo quando serve:</p>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <button class="btn btn-sm btn-outline-primary" onclick="Blazor.pauseCircuit()"><code>Blazor.pauseCircuit()</code></button>
+                </div>
+                <small class="text-body-secondary">La ripresa (<code>Blazor.resumeCircuit()</code>) parte dal pulsante del modale di riconnessione.</small>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header fw-semibold">AutoPause <span class="badge text-bg-light border">.NET 11</span></div>
+            <div class="card-body small" data-testid="autopause-config">
+                @if (AutoPauseOptions.Value.Enabled)
+                {
+                    <p class="mb-2">
+                        Scheda nascosta per <strong>@AutoPauseOptions.Value.HiddenDelay.TotalSeconds secondi</strong> → pausa automatica
+                        (default del pacchetto: @AutoPauseDemoOptions.PackageDefaultHiddenDelay.TotalMinutes minuti).
+                    </p>
+                }
+                else
+                {
+                    <p class="mb-2">Disattivata dalla configurazione (<code>AutoPause:Enabled=false</code>).</p>
+                }
+                <pre class="bg-body-tertiary p-2 rounded mb-0">.WithBrowserOptions(options =&gt;
+    options.AddAutoPause(p =&gt; p.HiddenDelay = …))</pre>
             </div>
         </div>
 
@@ -98,9 +127,11 @@
 <ObserveBox>
     <ol class="mb-2">
         <li>Incrementa il contatore e scrivi qualcosa nel ticket (prova anche con una seconda scheda e valori diversi).</li>
-        <li>Lancia <code>scripts\deploy-demo.ps1</code>: nei log compare <em>"Shutdown: richiesta di pausa per N circuit"</em>.</li>
+        <li>Lancia <code>scripts\deploy-demo.ps1</code>: il server chiama <code>RequestCircuitPauseAsync()</code> su ogni circuito e attende che si chiudano (nei log: <em>"Chiusura circuito"</em>).</li>
         <li>Il browser mostra "La sessione è stata messa in pausa dal server" e attende <code>/health</code>.</li>
         <li>Al riavvio la sessione riprende da sola: contatore e testo sono identici, <strong>versione e PID sono cambiati</strong>.</li>
+        <li>Premi <code>Blazor.pauseCircuit()</code>, poi <em>Riprendi</em>: lo stato torna, l'orario di creazione del componente cambia.</li>
+        <li>Passa a un'altra scheda per più di @AutoPauseOptions.Value.HiddenDelay.TotalSeconds secondi e torna: AutoPause ha messo in pausa il circuito e lo riprende da solo.</li>
     </ol>
     <p class="small text-body-secondary mb-0">
         Limiti: viene persistito solo lo stato marcato con <code>[PersistentState]</code> (serializzabile in JSON, cifrato con Data Protection);
@@ -110,6 +141,8 @@
 </ObserveBox>
 
 @code {
+    private readonly DateTimeOffset componentCreatedAt = DateTimeOffset.Now;
+
     [PersistentState]
     public int Count { get; set; }
 

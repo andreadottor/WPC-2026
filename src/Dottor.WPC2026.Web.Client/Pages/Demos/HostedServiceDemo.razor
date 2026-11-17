@@ -1,0 +1,90 @@
+@page "/demo/hosted-service"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@implements IDisposable
+@inject TicketStatsMonitor Monitor
+
+<PageTitle>Demo 6 · IHostedService in WebAssembly</PageTitle>
+
+<DemoHeader Number="6" Title="IHostedService in Blazor WebAssembly">
+    Un servizio in background che gira nel browser: parte insieme al runtime WebAssembly, aggiorna i dati
+    ogni @TicketStatsMonitor.Interval.TotalSeconds secondi e continua a lavorare anche quando cambi pagina.
+</DemoHeader>
+
+@if (Monitor.LastError is not null)
+{
+    <div class="alert alert-warning" role="status">@Monitor.LastError</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header fw-semibold d-flex justify-content-between">
+                Statistiche ticket (dal server)
+                <span class="badge text-bg-light border" data-testid="polls">Aggiornamenti: @Monitor.Polls</span>
+            </div>
+            <div class="card-body">
+                @if (Monitor.Latest is { } stats)
+                {
+                    <div class="row text-center g-3 mb-3">
+                        <div class="col-4"><div class="display-6" data-testid="total">@stats.Total</div><div class="small text-body-secondary">Ticket totali</div></div>
+                        <div class="col-4"><div class="display-6">@stats.Open</div><div class="small text-body-secondary">Aperti</div></div>
+                        <div class="col-4"><div class="display-6 text-danger">@stats.Critical</div><div class="small text-body-secondary">Critici non chiusi</div></div>
+                    </div>
+                    <p class="small mb-1">Ultimo ticket: <strong>@stats.LastTicketTitle</strong></p>
+                    <p class="small text-body-secondary mb-0">
+                        Dati generati alle @stats.GeneratedAt.ToString("HH:mm:ss") dalla versione @stats.ServerVersion del server.
+                    </p>
+                }
+                else
+                {
+                    <p class="text-body-secondary mb-0">In attesa del primo aggiornamento...</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header fw-semibold">Ciclo di vita</div>
+            <div class="card-body">
+                <dl class="row mb-0 diagnostics">
+                    <dt class="col-6">Servizio avviato alle</dt>
+                    <dd class="col-6" data-testid="service-started">@(Monitor.StartedAt?.ToString("HH:mm:ss") ?? "—")</dd>
+                    <dt class="col-6">Componente creato alle</dt>
+                    <dd class="col-6">@componentCreatedAt.ToString("HH:mm:ss")</dd>
+                    <dt class="col-6">Renderer</dt>
+                    <dd class="col-6">@RendererInfo.Name</dd>
+                </dl>
+            </div>
+        </div>
+
+        <pre class="small bg-body-tertiary p-2 rounded mt-3 mb-0">// Program.cs del progetto .Client
+builder.Services.AddSingleton&lt;TicketStatsMonitor&gt;();
+builder.Services.AddHostedService(sp =&gt;
+    sp.GetRequiredService&lt;TicketStatsMonitor&gt;());
+
+class TicketStatsMonitor : BackgroundService { … }</pre>
+    </div>
+</div>
+
+<ObserveBox>
+    <ol class="mb-2">
+        <li>Il contatore degli aggiornamenti sale da solo: il polling lo fa il servizio, non il componente.</li>
+        <li>In un'altra scheda crea un ticket nella <a href="demo/static-ssr-validation" target="_blank">Demo 3</a>: dopo qualche secondo il totale cambia.</li>
+        <li>Vai su un'altra pagina e torna qui: il componente è nuovo (orario di creazione diverso), il servizio no (contatore e orario di avvio invariati).</li>
+    </ol>
+    <p class="small text-body-secondary mb-0">
+        Il servizio vive nel runtime WebAssembly della scheda: si ferma quando la scheda viene chiusa o ricaricata.
+        La pagina disattiva il prerendering perché il servizio esiste solo nel browser.
+    </p>
+</ObserveBox>
+
+@code {
+    private readonly DateTimeOffset componentCreatedAt = DateTimeOffset.Now;
+
+    protected override void OnInitialized() => Monitor.Changed += OnMonitorChanged;
+
+    private void OnMonitorChanged() => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Monitor.Changed -= OnMonitorChanged;
+}

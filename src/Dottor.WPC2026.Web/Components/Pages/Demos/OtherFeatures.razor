@@ -1,6 +1,7 @@
 @page "/demo/other-features"
 @inject NavigationManager Navigation
 @inject IWebHostEnvironment Environment
+@inject Microsoft.Extensions.Options.IOptions<AutoPauseDemoOptions> AutoPauseOptions
 
 <PageTitle>Altre novità di Blazor .NET 11</PageTitle>
 
@@ -47,7 +48,7 @@ public string? Email { get; set; }
         </div>
     </div>
 
-    <div class="col-lg-6">
+    <div class="col-lg-6" id="browser-options">
         <div class="card h-100">
             <div class="card-header fw-semibold"><code>WithBrowserOptions</code>: configurare il client dal server</div>
             <div class="card-body">
@@ -57,12 +58,15 @@ public string? Email { get; set; }
                     <dd class="col-5">@(browserOptions?.InteractiveServer.ReconnectionMaxRetries?.ToString() ?? "default")</dd>
                     <dt class="col-7">InteractiveServer.ReconnectionRetryInterval</dt>
                     <dd class="col-5">@(browserOptions?.InteractiveServer.ReconnectionRetryInterval?.ToString() ?? "default")</dd>
+                    <dt class="col-7">AddAutoPause (da configurazione)</dt>
+                    <dd class="col-5">@(AutoPauseOptions.Value.Enabled ? $"dopo {AutoPauseOptions.Value.HiddenDelay.TotalSeconds} s" : "disattivata")</dd>
                 </dl>
                 <pre class="small bg-body-tertiary p-2 mb-0">app.MapRazorComponents&lt;App&gt;()
    .WithBrowserOptions(o =&gt;
    {
        o.InteractiveServer.ReconnectionMaxRetries = 30;
        o.InteractiveServer.ReconnectionRetryInterval = TimeSpan.FromSeconds(2);
+       o.AddAutoPause(p =&gt; p.HiddenDelay = TimeSpan.FromSeconds(10));
    });</pre>
             </div>
         </div>
@@ -70,20 +74,16 @@ public string? Email { get; set; }
 
     <div class="col-lg-6">
         <div class="card h-100">
-            <div class="card-header fw-semibold">TempData in static SSR</div>
+            <div class="card-header fw-semibold">Antiforgery senza <code>UseAntiforgery()</code></div>
             <div class="card-body">
-                @if (flash is not null)
-                {
-                    <div class="alert alert-success py-2" data-testid="flash">@flash</div>
-                }
-                <form method="post" @formname="flash" @onsubmit="SetFlash" class="mb-2">
-                    <AntiforgeryToken />
-                    <button class="btn btn-sm btn-primary" type="submit" data-testid="flash-submit">Invia (POST → redirect → GET)</button>
-                </form>
-                <p class="small mb-0">
-                    Il messaggio sopravvive al redirect e viene mostrato <strong>una sola volta</strong>: ricarica la pagina e sparisce.
-                    Esempio completo nella <a href="demo/static-ssr-validation">Demo 3</a>.
+                <p class="small mb-2">
+                    Nel template .NET 11 la riga <code>app.UseAntiforgery()</code> non c'è più: la protezione CSRF per gli endpoint
+                    Razor Components viene aggiunta automaticamente. <code>EditForm</code> e <code>&lt;AntiforgeryToken /&gt;</code>
+                    continuano a emettere il token nel form.
                 </p>
+                <pre class="small bg-body-tertiary p-2 mb-0">app.MapStaticAssets();
+// app.UseAntiforgery();  ← non serve più
+app.MapRazorComponents&lt;App&gt;();</pre>
             </div>
         </div>
     </div>
@@ -94,7 +94,8 @@ public string? Email { get; set; }
             <div class="card-body">
                 <ul class="small mb-2">
                     <li><code>ConfigureConnection</code>: opzioni della connessione SignalR direttamente su <code>AddInteractiveServerRenderMode</code>.</li>
-                    <li>Pausa avviata dal server e ripresa automatica dello stato: vedi la <a href="demo/circuit-pause">Demo 1</a>.</li>
+                    <li>Pausa avviata dal server, pausa dal browser e AutoPause: vedi la <a href="demo/circuit-pause">Demo 1</a>.</li>
+                    <li>TempData e Session in Static SSR: vedi la <a href="demo/static-ssr-validation">Demo 3</a>; CacheView: <a href="demo/cacheview">Demo 4</a>.</li>
                 </ul>
                 <pre class="small bg-body-tertiary p-2 mb-0">.AddInteractiveServerRenderMode(o =&gt;
     o.ConfigureConnection = c =&gt; c.AllowStatefulReconnects = true);</pre>
@@ -111,26 +112,11 @@ public string? Email { get; set; }
                     porta a <code>/demo/quickgrid</code> perché è risolto rispetto alla pagina corrente (<code>/demo/…</code>).
                 </p>
                 <p class="small mb-2">
-                    <a href="@Navigation.GetUriWithFragment("cache")" data-testid="fragment-link">Vai alla sezione #cache</a>
-                    costruisce <code>@Navigation.GetUriWithFragment("cache")</code>.
+                    <a href="@Navigation.GetUriWithFragment("browser-options")" data-testid="fragment-link">Vai alla sezione #browser-options</a>
+                    costruisce <code>@Navigation.GetUriWithFragment("browser-options")</code>.
                 </p>
                 <pre class="small bg-body-tertiary p-2 mb-0">&lt;NavLink href="quickgrid" RelativeToCurrentUri="true"&gt;
-Navigation.GetUriWithFragment("cache")</pre>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12" id="cache">
-        <div class="card">
-            <div class="card-header fw-semibold"><code>&lt;CacheView&gt;</code>: cache di un sotto-albero in static SSR</div>
-            <div class="card-body">
-                <div class="d-flex flex-wrap gap-4 mb-2">
-                    <div>Fuori dalla cache: <strong data-testid="time-live">@DateTime.Now.ToString("HH:mm:ss.fff")</strong></div>
-                    <CacheView ExpiresAfter="TimeSpan.FromSeconds(30)">
-                        <div>Dentro <code>CacheView</code> (30 s): <strong data-testid="time-cached">@DateTime.Now.ToString("HH:mm:ss.fff")</strong></div>
-                    </CacheView>
-                </div>
-                <p class="small mb-0">Ricarica la pagina: il primo orario cambia, il secondo resta uguale per 30 secondi.</p>
+Navigation.GetUriWithFragment("browser-options")</pre>
             </div>
         </div>
     </div>
@@ -143,29 +129,15 @@ Navigation.GetUriWithFragment("cache")</pre>
 @code {
     private readonly NewTicketModel sample = new();
     private BrowserOptions? browserOptions;
-    private string? flash;
 
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
 
-    [SupplyParameterFromTempData]
-    public string? FlashMessage { get; set; }
-
     protected override void OnInitialized()
     {
-        // Il valore della proprietà viene riscritto in TempData a fine richiesta: lo copiamo e lo azzeriamo.
-        flash = FlashMessage;
-        FlashMessage = null;
-
         if (HttpContext is not null)
         {
             browserOptions = BrowserOptions.GetBrowserOptions(HttpContext);
         }
-    }
-
-    private void SetFlash()
-    {
-        FlashMessage = $"Messaggio salvato in TempData alle {DateTime.Now:HH:mm:ss}.";
-        Navigation.NavigateTo("demo/other-features");
     }
 }

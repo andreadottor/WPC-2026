@@ -1,0 +1,104 @@
+@page "/demo/cacheview"
+@attribute [ExcludeFromInteractiveRouting]
+@inject NavigationManager Navigation
+
+@* Nessun @rendermode: CacheView lavora durante il rendering statico lato server. *@
+
+<PageTitle>Demo 4 · CacheView</PageTitle>
+
+<DemoHeader Number="4" Title="CacheView: cache dell'output di un sotto-albero in Static SSR">
+    Lo stesso report renderizzato due volte: una porzione viene ricalcolata a ogni richiesta, l'altra riusa
+    l'HTML generato da <code>&lt;CacheView&gt;</code>, senza istanziare né eseguire i componenti figli.
+</DemoHeader>
+
+<nav class="d-flex flex-wrap align-items-center gap-2 mb-3" aria-label="Categoria del report">
+    @foreach (var link in Links)
+    {
+        <a class="btn @(IsCurrent(link.Href) ? "btn-primary" : "btn-outline-primary")" href="@link.Href">@link.Label</a>
+    }
+    <span class="ms-2">Richiesta servita alle <strong data-testid="request-time">@requestTime.ToString("HH:mm:ss.fff")</strong> (fuori dalla cache)</span>
+</nav>
+
+@if (!CategoryReportService.IsKnown(Category))
+{
+    <div class="alert alert-warning" data-testid="unknown-category">
+        Categoria <code>@Category</code> non prevista. Il report non viene renderizzato né messo in cache:
+        valori arbitrari nella query creerebbero una voce di cache per ciascun valore.
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-lg-2 g-3">
+        <div class="col">
+            <CategoryReportView Category="@Category" Portion="live" Heading="Senza cache (ricalcolato a ogni richiesta)" />
+        </div>
+        <div class="col">
+            <CacheView VaryByQuery="category" ExpiresAfter="CacheDuration">
+                <CategoryReportView Category="@Category" Portion="cache" Heading="Dentro CacheView" ExpiresAfter="CacheDuration" />
+            </CacheView>
+        </div>
+    </div>
+}
+
+<div class="card mt-4">
+    <div class="card-header fw-semibold">Più <code>CacheView</code> nello stesso componente: <code>CacheKey</code></div>
+    <div class="card-body">
+        <div class="row row-cols-1 row-cols-md-2 g-3 mb-3">
+            @foreach (var category in CategoryReportService.Categories)
+            {
+                <div class="col">
+                    @* In un ciclo le istanze hanno lo stesso antenato: CacheKey le distingue. *@
+                    <CacheView CacheKey="@category" ExpiresAfter="CacheDuration">
+                        <div class="border rounded p-2">
+                            <strong>@category</strong> · riepilogo renderizzato alle
+                            <span class="font-monospace" data-testid="@($"summary-{category}")">@DateTime.Now.ToString("HH:mm:ss.fff")</span>
+                        </div>
+                    </CacheView>
+                </div>
+            }
+        </div>
+        <pre class="small bg-body-tertiary p-2 mb-0">@@foreach (var category in categories)
+{
+    &lt;CacheView CacheKey="@@category" ExpiresAfter="TimeSpan.FromSeconds(20)"&gt;…&lt;/CacheView&gt;
+}</pre>
+    </div>
+</div>
+
+<ObserveBox>
+    <ol class="mb-2">
+        <li>Ricarica la pagina: il report "Senza cache" aumenta il numero di generazione, quello dentro <code>CacheView</code> no (per 20 secondi).</li>
+        <li>Passa da <em>hardware</em> a <em>software</em>: <code>VaryByQuery="category"</code> crea una voce di cache per categoria.</li>
+        <li>Prova <em>software + utm</em>: il parametro <code>utm</code> non fa parte della chiave, quindi riusa la stessa voce.</li>
+    </ol>
+    <p class="small text-body-secondary mb-0">
+        Funziona solo in Static SSR (non è una cache per componenti interattivi) e la cache è condivisa tra gli utenti:
+        per dati personali usa <code>VaryByUser</code> o <code>VaryByCookie</code>. Le chiavi con valori arbitrari vanno limitate.
+    </p>
+</ObserveBox>
+
+@code {
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(20);
+    private static readonly (string Label, string Href)[] Links =
+    [
+        ("hardware", "demo/cacheview?category=hardware"),
+        ("software", "demo/cacheview?category=software"),
+        ("software + utm", "demo/cacheview?category=software&utm=slide"),
+    ];
+
+    private readonly DateTimeOffset requestTime = DateTimeOffset.Now;
+
+    [SupplyParameterFromQuery(Name = "category")]
+    public string? Category { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (string.IsNullOrEmpty(Category))
+        {
+            // Un solo URL canonico per categoria mantiene prevedibili le chiavi di VaryByQuery.
+            Navigation.NavigateTo("demo/cacheview?category=hardware");
+        }
+    }
+
+    private bool IsCurrent(string href) =>
+        Navigation.ToBaseRelativePath(Navigation.Uri).Equals(href, StringComparison.Ordinal);
+}

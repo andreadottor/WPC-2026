@@ -1,5 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Dottor.WPC2026.Web/Dottor.WPC2026.Web.csproj" />
+    <Project Path="src/Dottor.WPC2026.Web.Client/Dottor.WPC2026.Web.Client.csproj" />
+    <Project Path="src/Dottor.WPC2026.WebWorker/Dottor.WPC2026.WebWorker.csproj" />
   </Folder>
 </Solution>
