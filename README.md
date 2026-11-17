@@ -92,6 +92,13 @@ L'output della nuova istanza viene scritto in `.demo/logs/`.
 La nuova istanza resta attiva in background: fermala dal Task Manager o con `Stop-Process -Id <PID>`
 (il PID è mostrato nella pagina e restituito da `/health`).
 
+### Pagina di manutenzione
+
+`/maintenance` (voce **Strumenti → Manutenzione** nel menu) mostra in tempo reale i circuiti connessi tracciati da
+`CircuitShutdownService` e permette di arrestare l'applicazione dalla UI con `IHostApplicationLifetime.StopApplication()`.
+Parte lo stesso shutdown controllato dello script: i circuiti vanno in pausa e salvano lo stato. Lo script però avvia anche
+la nuova istanza, la pagina no: dopo l'arresto riavvia l'app a mano. Il pulsante è abilitato solo in Development.
+
 ## Preparazione delle demo in conferenza
 
 Prima della sessione: `dotnet build`, avvia l'app con il profilo `https`, apri la homepage e verifica il

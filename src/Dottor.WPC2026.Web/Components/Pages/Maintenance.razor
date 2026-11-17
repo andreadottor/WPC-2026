@@ -1,0 +1,238 @@
+@page "/maintenance"
+@rendermode InteractiveServer
+@implements IDisposable
+@inject CircuitShutdownService Shutdown
+@inject ShutdownCircuitHandler Connection
+@inject DemoInstance Instance
+@inject IHostApplicationLifetime Lifetime
+@inject IWebHostEnvironment Environment
+@inject ILogger<Maintenance> Logger
+
+<PageTitle>Manutenzione</PageTitle>
+
+<div class="mb-4">
+    <span class="badge text-bg-dark mb-2">⚙ Manutenzione</span>
+    <h1 class="h2 mb-2">Pannello di manutenzione</h1>
+    <p class="lead text-body-secondary mb-0">
+        Circuiti attivi su questa istanza e arresto controllato dell'applicazione direttamente dalla UI,
+        senza script esterni.
+    </p>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="text-body-secondary small text-uppercase">Circuiti connessi</div>
+                <div class="display-4 fw-semibold" data-testid="circuit-count">@Shutdown.ActiveCircuitCount</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="text-body-secondary small text-uppercase">Disconnessi in memoria</div>
+                <div class="display-4 fw-semibold text-body-secondary" data-testid="disconnected-count">@disconnected.Count</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="text-body-secondary small text-uppercase">Stato</div>
+                <div class="fs-4 fw-semibold mt-2">
+                    @if (Shutdown.IsStopping || stopRequested)
+                    {
+                        <span class="text-danger">Arresto in corso</span>
+                    }
+                    else
+                    {
+                        <span class="text-success">In esecuzione</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="text-body-secondary small text-uppercase">Versione · Processo</div>
+                <div class="fs-4 fw-semibold mt-2">@Instance.Version · <code>@Instance.ProcessId</code></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+                <span>Circuiti connessi</span>
+                <span class="badge text-bg-light border">CircuitShutdownService</span>
+            </div>
+            @if (circuits.Count == 0)
+            {
+                <div class="card-body text-body-secondary">Nessun circuito connesso.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Circuito</th>
+                                <th>Connesso alle</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var circuit in circuits)
+                            {
+                                <tr>
+                                    <td class="ps-3"><code title="@circuit.Id">@ShortId(circuit.Id)</code></td>
+                                    <td>@circuit.ConnectedAt.ToString("HH:mm:ss")</td>
+                                    <td>
+                                        @if (circuit.Id == Connection.CircuitId)
+                                        {
+                                            <span class="badge text-bg-primary">questa pagina</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            <div class="card-footer small text-body-secondary">
+                L'elenco si aggiorna in tempo reale: apri altre schede su una demo interattiva per vederle comparire.
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+                <span>Disconnessi, ancora in memoria</span>
+                <span class="badge text-bg-light border">DisconnectedCircuitRetentionPeriod</span>
+            </div>
+            @if (disconnected.Count == 0)
+            {
+                <div class="card-body text-body-secondary">Nessun circuito disconnesso in attesa di riconnessione.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Circuito</th>
+                                <th>Connesso alle</th>
+                                <th>Disconnesso alle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var circuit in disconnected)
+                            {
+                                <tr>
+                                    <td class="ps-3"><code title="@circuit.Id">@ShortId(circuit.Id)</code></td>
+                                    <td>@circuit.ConnectedAt.ToString("HH:mm:ss")</td>
+                                    <td>@circuit.DisconnectedAt.ToString("HH:mm:ss")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            <div class="card-footer small text-body-secondary">
+                Quando la connessione cade, il server tiene il circuito in memoria (di default per 3 minuti) per permettere
+                la riconnessione. Se la scheda viene chiusa, il browser lo segnala e il circuito viene rilasciato subito.
+                I circuiti disconnessi non possono essere messi in pausa: allo shutdown il loro stato va perso.
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card border-danger">
+            <div class="card-header fw-semibold text-danger">Arresto controllato</div>
+            <div class="card-body">
+                <p>
+                    Chiama <code>IHostApplicationLifetime.StopApplication()</code>: parte lo stesso shutdown dello
+                    script di deploy. Prima di chiudere, il server mette in pausa tutti i circuiti, che salvano lo stato nel browser.
+                </p>
+
+                @if (!Environment.IsDevelopment())
+                {
+                    <div class="alert alert-warning mb-0">L'arresto dalla UI è abilitato solo in ambiente Development.</div>
+                }
+                else if (stopRequested)
+                {
+                    <div class="alert alert-danger mb-0" role="status">
+                        Arresto richiesto. I circuiti vengono messi in pausa e il processo <code>@Instance.ProcessId</code> si ferma.
+                    </div>
+                }
+                else if (confirming)
+                {
+                    <div class="alert alert-danger">
+                        Confermi l'arresto? Verranno messi in pausa <strong>@Shutdown.ActiveCircuitCount</strong> circuiti.
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-danger" @onclick="StopApplication">Sì, arresta</button>
+                        <button class="btn btn-outline-secondary" @onclick="() => confirming = false">Annulla</button>
+                    </div>
+                }
+                else
+                {
+                    <button class="btn btn-outline-danger" @onclick="() => confirming = true">Arresta l'applicazione</button>
+                }
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header fw-semibold">Come funziona</div>
+            <div class="card-body small">
+<pre class="mb-3"><code>ThreadPool.QueueUserWorkItem(
+    _ => lifetime.StopApplication());</code></pre>
+                <ul class="mb-0">
+                    <li>
+                        <code>StopApplication()</code> esegue subito le callback di <code>ApplicationStopping</code>, che aspettano
+                        la pausa dei circuiti, compreso quello di questa pagina. Per questo la chiamata parte da un thread del pool
+                        e non dal thread del circuito.
+                    </li>
+                    <li>Quando il processo si ferma, compare la modale di riconnessione. Non c'è uno script che avvii la v2: riavvia l'app a mano (F5 o <code>dotnet run</code>).</li>
+                    <li>In produzione la nuova istanza la avvia l'orchestratore (App Service, Kubernetes, IIS...).</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private IReadOnlyList<ActiveCircuit> circuits = [];
+    private IReadOnlyList<DisconnectedCircuit> disconnected = [];
+    private bool confirming;
+    private bool stopRequested;
+
+    protected override void OnInitialized()
+    {
+        circuits = Shutdown.ActiveCircuits;
+        disconnected = Shutdown.DisconnectedCircuits;
+        Shutdown.CircuitsChanged += OnCircuitsChanged;
+    }
+
+    private void OnCircuitsChanged() => _ = InvokeAsync(() =>
+    {
+        circuits = Shutdown.ActiveCircuits;
+        disconnected = Shutdown.DisconnectedCircuits;
+        StateHasChanged();
+    });
+
+    private void StopApplication()
+    {
+        confirming = false;
+        stopRequested = true;
+        Logger.LogWarning("Arresto dell'applicazione richiesto dal pannello di manutenzione (circuito {CircuitId})", Connection.CircuitId);
+        ThreadPool.QueueUserWorkItem(_ => Lifetime.StopApplication());
+    }
+
+    private static string ShortId(string id) => id.Length > 10 ? id[..10] + "…" : id;
+
+    public void Dispose() => Shutdown.CircuitsChanged -= OnCircuitsChanged;
+}

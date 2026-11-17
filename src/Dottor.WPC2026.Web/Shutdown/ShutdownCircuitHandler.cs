@@ -31,7 +31,7 @@ public sealed class ShutdownCircuitHandler(CircuitShutdownService shutdown,  ILo
 
     public override Task OnCircuitClosedAsync(Circuit circuit, CancellationToken ct)
     {
-        shutdown.Unregister(circuit.Id);
+        shutdown.Unregister(circuit.Id, circuitClosed: true);
         logger.LogInformation("Chiusura circuito: {CircuitId}", circuit.Id);
         return Task.CompletedTask;
     }
