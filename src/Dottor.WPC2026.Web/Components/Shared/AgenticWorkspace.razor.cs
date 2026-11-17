@@ -70,30 +70,6 @@ public partial class AgenticWorkspace
 
     private Task ResetAsync() => ResetRequested.InvokeAsync();
 
-    private static RenderFragment DiffText(string? oldText, string? newText) => builder =>
-    {
-        var sequence = 0;
-        foreach (var part in TextDiff.Compute(oldText, newText))
-        {
-            switch (part.Kind)
-            {
-                case DiffKind.Added:
-                    builder.OpenElement(sequence++, "ins");
-                    builder.AddContent(sequence++, part.Text);
-                    builder.CloseElement();
-                    break;
-                case DiffKind.Removed:
-                    builder.OpenElement(sequence++, "del");
-                    builder.AddContent(sequence++, part.Text);
-                    builder.CloseElement();
-                    break;
-                default:
-                    builder.AddContent(sequence++, part.Text);
-                    break;
-            }
-        }
-    };
-
     public void Dispose()
     {
         stateRegistration?.Dispose();

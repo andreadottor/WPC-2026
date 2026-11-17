@@ -1,0 +1,15 @@
+@foreach (var part in TextDiff.Compute(OldText, NewText))
+{
+    switch (part.Kind)
+    {
+        case DiffKind.Added:
+            <ins>@part.Text</ins>
+            break;
+        case DiffKind.Removed:
+            <del>@part.Text</del>
+            break;
+        default:
+            @part.Text
+            break;
+    }
+}
