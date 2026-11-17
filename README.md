@@ -42,29 +42,23 @@ Le demo seguono i capitoli della sessione.
 | 6 | WebAssembly | IHostedService | `/demo/hosted-service` | `BackgroundService` registrato con `AddHostedService` nel client WebAssembly |
 | 7 | Componenti | Virtualize | `/demo/virtualize` | `AnchorMode`, `ScrollToItemAsync`, elementi a altezza variabile |
 | 8 | Componenti | QuickGrid | `/demo/quickgrid` | Ordinamento e paginazione nell'URL, `OnRowClick` |
-| 9 | Agentic UI | Agentic UI | `/demo/agentic-ui` | `Microsoft.AspNetCore.Components.AI`: stato condiviso, UI action, tool server, approvazioni |
+| 9 | Agentic UI | Chat minimale | `/demo/chat` | `<ChatPage>` + `UIAgent` sull'`IChatClient` di Microsoft.Extensions.AI: una chat completa in poche righe |
+| 10 | Agentic UI | Agentic UI | `/demo/agentic-ui` | `Microsoft.AspNetCore.Components.AI`: stato condiviso, UI action, tool server, approvazioni |
 | – | Extra | Altre novità | `/demo/other-features` | `DisplayName`, `EnvironmentView`, `WithBrowserOptions`, antiforgery automatico, `ConfigureConnection`, `NavLink` relativo |
 Tutte le demo sono raggiungibili dalle card della homepage.
 
-## Provider AI (demo 9)
+## Modello AI (demo 9 e 10)
 
-Per default la demo usa un **client simulato** (`AI:Provider = "Simulated"`): risposte deterministiche,
-nessuna chiamata esterna, nessuna chiave. È la modalità consigliata sul palco. Il client simulato riconosce
-parole chiave nel prompt: *tecnico, sicurezza, titolo, chiarezza/migliora* → proposta di modifica;
-*riassumi/analizza* → tool server di analisi; *pubblica* → tool con approvazione.
-
-Per un modello reale (qualsiasi endpoint compatibile OpenAI: OpenAI, Azure OpenAI v1, GitHub Models):
+Le demo AI usano **Microsoft.Extensions.AI**: un `IChatClient` creato dal client OpenAI e puntato sull'endpoint v1
+di **Microsoft Foundry** (`AI:Endpoint` = `https://blazor-ai-resource.openai.azure.com/openai/v1`,
+deployment `AI:Model` = `gpt-6.1-sol`, entrambi in `appsettings.json`). La chiave API va **solo** nei User Secrets:
 
 ```powershell
-dotnet user-secrets --project src/Dottor.WPC2026.Web set "AI:Provider" "OpenAI"
-dotnet user-secrets --project src/Dottor.WPC2026.Web set "AI:Endpoint" "https://models.github.ai/inference"
-dotnet user-secrets --project src/Dottor.WPC2026.Web set "AI:Model" "openai/gpt-4.1-mini"
-dotnet user-secrets --project src/Dottor.WPC2026.Web set "AI:ApiKey" "<token>"
+dotnet user-secrets --project src/Dottor.WPC2026.Web set "AI:ApiKey" "<chiave>"
 ```
 
-In alternativa usa le variabili d'ambiente `AI__Provider`, `AI__Endpoint`, `AI__Model`, `AI__ApiKey`.
-Senza `ApiKey` l'app torna alla modalità simulata. Il badge in alto nella pagina indica la modalità attiva.
-Non salvare mai la chiave nel repository.
+In alternativa usa la variabile d'ambiente `AI__ApiKey`. Senza chiave l'app parte comunque: il badge della homepage
+indica "chiave API mancante" e la chat mostra un errore con le istruzioni. Non salvare mai la chiave nel repository.
 
 ## Script di deployment (demo 1)
 
@@ -102,7 +96,7 @@ la nuova istanza, la pagina no: dopo l'arresto riavvia l'app a mano. Il pulsante
 ## Preparazione delle demo in conferenza
 
 Prima della sessione: `dotnet build`, avvia l'app con il profilo `https`, apri la homepage e verifica il
-badge "Modalità dimostrativa" nella demo 9.
+badge AI con il nome del modello (la chiave API è configurata) e fai una domanda di prova nella demo 9.
 
 1. **Circuit pause** – Incrementa il contatore e scrivi titolo/descrizione del ticket. Esegui
    `pwsh ./scripts/deploy-demo.ps1`. *Atteso:* compare il modal di pausa, poi la sessione riprende da sola;
@@ -123,16 +117,18 @@ badge "Modalità dimostrativa" nella demo 9.
    *Atteso:* la posizione resta stabile quando arrivano nuovi elementi; il log resta ancorato in fondo.
 8. **QuickGrid** – Ordina per priorità, cambia pagina, clicca una riga e torna indietro.
    *Atteso:* `sort`, `direction` e `page` nell'URL; i pulsanti Indietro/Avanti del browser ripristinano la griglia.
-9. **Agentic UI** – Usa i suggerimenti: "Rendi la descrizione più tecnica" (diff + Accetta/Rifiuta),
+9. **Chat minimale** – Chiedi "Cosa c'è di nuovo in Blazor .NET 11?" e mostra il codice della pagina (`MinimalChat.razor`).
+   *Atteso:* risposta in streaming, cronologia mantenuta, pulsante per fermare la generazione.
+10. **Agentic UI** – Usa i suggerimenti: "Rendi la descrizione più tecnica" (diff + Accetta/Rifiuta),
    "Riassumi il documento" (card del tool server), "Pubblica il documento" (approvazione).
    *Atteso:* il documento cambia solo dopo "Accetta"; la pubblicazione avviene solo dopo "Approva".
-10. **Altre novità** – Mostra `DisplayName`, `EnvironmentView`, le opzioni del browser lette dal server (inclusa AutoPause)
+11. **Altre novità** – Mostra `DisplayName`, `EnvironmentView`, le opzioni del browser lette dal server (inclusa AutoPause)
     e la nota sull'antiforgery.
 
 ## Limitazioni
 
 - **`Microsoft.AspNetCore.Components.AI` è sperimentale** (`0.1.0-preview`): API e componenti potrebbero cambiare.
-  Le risposte del client simulato sono predefinite; con un modello reale testo e scelta dei tool variano.
+  Con un modello reale testo e scelta dei tool variano: prova le demo prima della sessione.
 - Il ripristino dello stato del circuit (demo 1) funziona per uno shutdown controllato: se il processo viene
   terminato bruscamente lo stato non persistito va perso. Lo stato vive solo nel browser che lo ha ricevuto.
 - `[SupplyParameterFromTempData]` riscrive il valore in TempData alla fine di ogni richiesta: per un messaggio

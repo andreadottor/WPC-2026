@@ -14,8 +14,8 @@
         <span class="badge text-bg-light border">Versione app: @Instance.Version</span>
         <span class="badge text-bg-light border">PID: @Instance.ProcessId</span>
         <span class="badge text-bg-light border">Runtime: @System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription</span>
-        <span class="badge @(AiOptions.IsSimulated ? "text-bg-warning" : "text-bg-success")">
-            AI: @(AiOptions.IsSimulated ? "modalità dimostrativa" : AiOptions.Model)
+        <span class="badge @(AiOptions.IsConfigured ? "text-bg-success" : "text-bg-warning")">
+            AI: @(AiOptions.IsConfigured ? AiOptions.Model : "chiave API mancante")
         </span>
     </div>
 </div>

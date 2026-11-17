@@ -7,7 +7,7 @@ namespace Dottor.WPC2026.Web.Services.Ai;
 /// Blocco tipizzato generato dal source generator di Microsoft.AspNetCore.Components.AI:
 /// trasforma la chiamata al tool server-side "analyze_document" in un oggetto con il risultato deserializzato.
 /// </summary>
-[ToolBlock(SimulatedDocumentChatClient.AnalyzeDocumentTool)]
+[ToolBlock(DocumentTools.Analyze)]
 public partial class DocumentAnalysisBlock : FunctionInvocationContentBlock
 {
     [ToolResult]

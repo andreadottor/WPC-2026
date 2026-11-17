@@ -1,0 +1,27 @@
+@page "/demo/chat"
+@rendermode InteractiveServer
+@implements IDisposable
+@inject IChatClient ChatClient
+
+<PageTitle>Demo 9 · Chat minimale</PageTitle>
+
+<DemoHeader Number="9" Title="Chat minimale: IChatClient + ChatPage">
+    Tutto il codice della chat è in questa pagina: un <code>UIAgent</code> creato dall'<code>IChatClient</code> registrato in DI
+    e il componente <code>&lt;ChatPage&gt;</code> che gestisce streaming, cronologia, input e annullamento.
+</DemoHeader>
+
+<div class="minimal-chat border rounded-3 shadow-sm">
+    <ChatPage Agent="agent" Placeholder="Chiedi qualcosa su Blazor .NET 11…" />
+</div>
+
+@code {
+    private UIAgent agent = default!;
+
+    protected override void OnInitialized() =>
+        agent = new UIAgent(ChatClient, new ChatOptions
+        {
+            Instructions = "Sei un esperto di Blazor e .NET 11. Rispondi in italiano, in modo breve e concreto."
+        });
+
+    public void Dispose() => agent.Dispose();
+}

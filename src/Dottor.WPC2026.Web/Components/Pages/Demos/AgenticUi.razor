@@ -7,9 +7,9 @@
 @inject AiOptions Ai
 @inject ILoggerFactory LoggerFactory
 
-<PageTitle>Demo 9 · Agentic UI</PageTitle>
+<PageTitle>Demo 10 · Agentic UI</PageTitle>
 
-<DemoHeader Number="9" Title="Agentic UI: l'agente propone, l'utente decide">
+<DemoHeader Number="10" Title="Agentic UI: l'agente propone, l'utente decide">
     Con <code>Microsoft.AspNetCore.Components.AI</code> l'agente condivide lo stato con la UI (<code>UIAgent&lt;DocumentState&gt;</code>),
     propone modifiche come <em>stato predittivo</em>, chiama tool server-side e chiede approvazione prima delle azioni sensibili.
 </DemoHeader>
@@ -52,9 +52,9 @@
                 "Rispondi in italiano con frasi brevi.",
             Tools =
             [
-                AIFunctionFactory.Create(AnalyzeDocument, SimulatedDocumentChatClient.AnalyzeDocumentTool,
+                AIFunctionFactory.Create(AnalyzeDocument, DocumentTools.Analyze,
                     "Analizza il documento corrente (parole, sezioni, tempo di lettura) senza modificarlo."),
-                new ApprovalRequiredAIFunction(AIFunctionFactory.Create(PublishDocument, SimulatedDocumentChatClient.PublishDocumentTool,
+                new ApprovalRequiredAIFunction(AIFunctionFactory.Create(PublishDocument, DocumentTools.Publish,
                     "Pubblica il documento corrente. Richiede l'approvazione dell'utente."))
             ]
         };
@@ -63,14 +63,14 @@
         options.StateMapper = context =>
         {
             var proposal = context.Update.Contents.OfType<FunctionCallContent>()
-                .FirstOrDefault(call => call.Name == SimulatedDocumentChatClient.ProposeDocumentTool);
+                .FirstOrDefault(call => call.Name == DocumentTools.Propose);
             if (proposal?.Arguments?.TryGetValue("document", out var value) == true && ReadDocument(value) is { } document)
             {
                 context.SetPredictiveState(document);
             }
         };
 
-        options.RegisterUIAction(AIFunctionFactory.Create(ReviewProposal, SimulatedDocumentChatClient.ProposeDocumentTool,
+        options.RegisterUIAction(AIFunctionFactory.Create(ReviewProposal, DocumentTools.Propose,
             "Propone all'utente una nuova versione completa del documento, che può accettarla o rifiutarla."));
 
         options.AddGeneratedToolBlocks();

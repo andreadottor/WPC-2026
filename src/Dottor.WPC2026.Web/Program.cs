@@ -34,8 +34,8 @@ builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<TicketService>();
 builder.Services.AddSingleton<CategoryReportService>();
 
-// Demo 9: IChatClient (simulato di default, reale se configurato nella sezione "AI").
-builder.Services.AddDocumentAssistant(builder.Configuration);
+// Demo 9 e 10: IChatClient (Microsoft.Extensions.AI) su Microsoft Foundry: sezione "AI" + chiave nei User Secrets.
+builder.Services.AddFoundryChatClient(builder.Configuration);
 
 var app = builder.Build();
 

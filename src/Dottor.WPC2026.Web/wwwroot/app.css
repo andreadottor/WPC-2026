@@ -156,6 +156,19 @@ h1:focus {
     height: 100%;
 }
 
+.minimal-chat {
+    height: 65vh;
+    min-height: 420px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.minimal-chat > * {
+    flex: 1;
+    min-height: 0;
+}
+
 .document-preview.pending {
     outline: 3px dashed var(--bs-warning);
     outline-offset: 4px;

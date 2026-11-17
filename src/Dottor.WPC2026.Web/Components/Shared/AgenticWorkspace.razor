@@ -60,7 +60,7 @@
     <aside class="card agentic-chat">
         <div class="card-header d-flex align-items-center gap-2">
             <span class="fw-semibold">Assistente</span>
-            <span class="badge @(Ai.IsSimulated ? "text-bg-secondary" : "text-bg-primary")" data-testid="ai-mode">@Ai.Description</span>
+            <span class="badge @(Ai.IsConfigured ? "text-bg-primary" : "text-bg-warning")" data-testid="ai-mode">@Ai.Description</span>
         </div>
         <div class="sc-ai-root sc-ai-chat-page">
             <div class="sc-ai-chat-page__body">
@@ -72,7 +72,7 @@
                     </EmptyContent>
                     <ChildContent>
                         <BlockRenderer TBlock="UIActionBlock" Context="action"
-                                       When="@(block => block.ToolName == SimulatedDocumentChatClient.ProposeDocumentTool)">
+                                       When="@(block => block.ToolName == DocumentTools.Propose)">
                             <ProposalCard Block="action" />
                         </BlockRenderer>
                         <BlockRenderer TBlock="FunctionApprovalBlock" Context="approval">
@@ -196,7 +196,7 @@
             lastStatus = status;
             if (status == ConversationStatus.Error)
             {
-                Logger.LogError(AgentContext.Error, "Demo 9: errore durante il turno dell'agente");
+                Logger.LogError(AgentContext.Error, "Demo 10: errore durante il turno dell'agente");
             }
             StateHasChanged();
         }));
