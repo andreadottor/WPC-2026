@@ -5,13 +5,13 @@ namespace Dottor.WPC2026.Web.Components.Pages.Demos;
 
 public partial class CircuitPause
 {
-    private readonly DateTimeOffset componentCreatedAt = DateTimeOffset.Now;
+    private readonly DateTimeOffset _componentCreatedAt = DateTimeOffset.Now;
 
     [PersistentState]
     public int Count { get; set; }
 
     [PersistentState]
-    public TicketDraft? Ticket { get; set; }
+    public OrderDraft? Order { get; set; }
 
     // Memorizza quale processo ha creato lo stato: dopo il deploy è diverso da quello corrente.
     [PersistentState]
@@ -22,7 +22,7 @@ public partial class CircuitPause
 
     protected override void OnInitialized()
     {
-        Ticket ??= new TicketDraft();
+        Order ??= new OrderDraft();
         OriginalProcessId ??= Instance.ProcessId;
         OriginalVersion ??= Instance.Version;
     }

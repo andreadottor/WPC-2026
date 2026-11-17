@@ -6,37 +6,46 @@ namespace Dottor.WPC2026.Web.Components.Pages.Demos;
 
 public partial class QuickGridDemo
 {
-    private IQueryable<Ticket> tickets = default!;
-    private readonly PaginationState pagination = new() { ItemsPerPage = 15 };
-    private readonly GridSort<Ticket> sortByPriority = GridSort<Ticket>.ByAscending(t => t.Priority);
-    private readonly GridSort<Ticket> sortByStatus = GridSort<Ticket>.ByAscending(t => t.Status);
-    private string currentUrl = "";
+    private IQueryable<Order> _orders = default!;
+    private readonly PaginationState _pagination = new() { ItemsPerPage = 15 };
+    private readonly GridSort<Order> _sortByPizza = GridSort<Order>.ByAscending(o => o.Pizza);
+    private readonly GridSort<Order> _sortByHunger = GridSort<Order>.ByAscending(o => o.Hunger);
+    private readonly GridSort<Order> _sortByStatus = GridSort<Order>.ByAscending(o => o.Status);
+    private string _currentUrl = "";
 
     protected override void OnInitialized()
     {
-        tickets = Tickets.GetAll();
-        currentUrl = Navigation.Uri;
+        _orders = Orders.GetAll();
+        _currentUrl = Navigation.Uri;
         Navigation.LocationChanged += OnLocationChanged;
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        currentUrl = e.Location;
+        _currentUrl = e.Location;
         InvokeAsync(StateHasChanged);
     }
 
-    private void OpenTicket(Ticket ticket)
+    private void OpenOrder(Order order)
     {
         var returnUrl = Navigation.ToBaseRelativePath(Navigation.Uri);
-        Navigation.NavigateTo($"demo/quickgrid/{ticket.Id}?returnUrl={Uri.EscapeDataString(returnUrl)}");
+        Navigation.NavigateTo($"demo/quickgrid/{order.Id}?returnUrl={Uri.EscapeDataString(returnUrl)}");
     }
 
-    private static string PriorityClass(TicketPriority priority) => priority switch
+    private static string HungerClass(HungerLevel hunger) => hunger switch
     {
-        TicketPriority.Critical => "text-bg-danger",
-        TicketPriority.High => "text-bg-warning",
-        TicketPriority.Medium => "text-bg-info",
+        HungerLevel.Starving => "text-bg-danger",
+        HungerLevel.VeryHungry => "text-bg-warning",
+        HungerLevel.Hungry => "text-bg-info",
         _ => "text-bg-light border"
+    };
+
+    private static string StatusIcon(OrderStatus status) => status switch
+    {
+        OrderStatus.Received => "📝",
+        OrderStatus.InOven => "🔥",
+        OrderStatus.OutForDelivery => "🛵",
+        _ => "✅"
     };
 
     public void Dispose() => Navigation.LocationChanged -= OnLocationChanged;

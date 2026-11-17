@@ -14,9 +14,9 @@
 <div class="card mb-4">
     <div class="card-header fw-semibold">La pagina è reattiva?</div>
     <div class="card-body">
-        <div class="ww-track mb-3" aria-hidden="true"><div class="ww-ball"></div></div>
+        <div class="ww-track mb-3" aria-hidden="true"><div class="ww-ball">🍕</div></div>
         <div class="d-flex flex-wrap align-items-center gap-4">
-            <div>Orologio aggiornato da .NET: <strong class="font-monospace fs-5" data-testid="clock">@clock.ToString("HH:mm:ss.f")</strong></div>
+            <div>Orologio aggiornato da .NET: <strong class="font-monospace fs-5" data-testid="clock">@_clock.ToString("HH:mm:ss.f")</strong></div>
             <input class="form-control w-auto" placeholder="Prova a scrivere qui durante il calcolo..." />
         </div>
     </div>
@@ -25,34 +25,34 @@
 <div class="row g-4">
     <div class="col-lg-5">
         <div class="card">
-            <div class="card-header fw-semibold">Analisi di un CSV di ticket</div>
+            <div class="card-header fw-semibold">🧾 Analisi del CSV degli ordini</div>
             <div class="card-body">
-                <label class="form-label" for="rows">Righe da generare</label>
-                <select id="rows" class="form-select mb-3" @bind="rows" disabled="@busy">
+                <label class="form-label" for="rows">Ordini da analizzare</label>
+                <select id="rows" class="form-select mb-3" @bind="_rows" disabled="@_busy">
                     <option value="100000">100.000</option>
                     <option value="250000">250.000</option>
                     <option value="500000">500.000</option>
                 </select>
 
                 <div class="d-grid gap-2">
-                    <button class="btn btn-outline-danger" @onclick="AnalyzeOnUiThread" disabled="@busy">
+                    <button class="btn btn-outline-danger" @onclick="AnalyzeOnUiThread" disabled="@_busy">
                         Analizza sul thread della UI
                     </button>
-                    <button class="btn btn-primary" @onclick="AnalyzeInWorker" disabled="@(busy || worker is null)">
+                    <button class="btn btn-primary" @onclick="AnalyzeInWorker" disabled="@(_busy || _worker is null)">
                         Analizza nel Web Worker
                     </button>
-                    <button class="btn btn-outline-secondary" @onclick="Cancel" disabled="@(cts is null)">
-                        Annulla l'attesa del worker
+                    <button class="btn btn-outline-secondary" @onclick="Cancel" disabled="@(_cts is null)">
+                        Annulla l'attesa del _worker
                     </button>
                 </div>
 
                 <dl class="row small mt-3 mb-0 diagnostics">
                     <dt class="col-6">Web Worker</dt>
-                    <dd class="col-6" data-testid="worker-status">@workerStatus</dd>
+                    <dd class="col-6" data-testid="worker-status">@_workerStatus</dd>
                     <dt class="col-6">Dati</dt>
-                    <dd class="col-6">@(csv is null ? "non ancora generati" : $"{rows:N0} righe · {csv.Length / 1024.0 / 1024.0:N1} MB")</dd>
+                    <dd class="col-6">@(_csv is null ? "non ancora generati" : $"{_rows:N0} righe · {_csv.Length / 1024.0 / 1024.0:N1} MB")</dd>
                     <dt class="col-6">Stato</dt>
-                    <dd class="col-6" data-testid="status">@status</dd>
+                    <dd class="col-6" data-testid="status">@_status</dd>
                 </dl>
             </div>
         </div>
@@ -62,36 +62,36 @@
         <div class="card h-100">
             <div class="card-header fw-semibold">
                 Risultato
-                @if (lastRun is not null)
+                @if (_lastRun is not null)
                 {
-                    <span class="badge @(lastRun.InWorker ? "text-bg-success" : "text-bg-danger") ms-2">@(lastRun.InWorker ? "Web Worker" : "Thread UI")</span>
+                    <span class="badge @(_lastRun.InWorker ? "text-bg-success" : "text-bg-danger") ms-2">@(_lastRun.InWorker ? "Web Worker" : "Thread UI")</span>
                 }
             </div>
             <div class="card-body">
-                @if (lastRun is null)
+                @if (_lastRun is null)
                 {
-                    <p class="text-body-secondary mb-0">Avvia un'analisi per vedere il risultato.</p>
+                    <p class="text-body-secondary mb-0">Avvia un'analisi per scoprire la pizza più amata (e quella con più reclami).</p>
                 }
                 else
                 {
                     <p class="small mb-2">
-                        Calcolo: <strong>@lastRun.Summary.ElapsedMs.ToString("0") ms</strong> ·
-                        totale (incluso il trasferimento dei dati): <strong>@lastRun.TotalMs.ToString("0") ms</strong> ·
-                        righe analizzate: @lastRun.Summary.Rows.ToString("N0")
+                        Calcolo: <strong>@_lastRun.Summary.ElapsedMs.ToString("0") ms</strong> ·
+                        totale (incluso il trasferimento dei dati): <strong>@_lastRun.TotalMs.ToString("0") ms</strong> ·
+                        righe analizzate: @_lastRun.Summary.Rows.ToString("N0")
                     </p>
                     <table class="table table-sm mb-0">
                         <thead>
-                            <tr><th>Categoria</th><th class="text-end">Ticket</th><th class="text-end">Media (h)</th><th class="text-end">P95 (h)</th><th class="text-end">Riaperti</th></tr>
+                            <tr><th>Pizza</th><th class="text-end">Ordini</th><th class="text-end">Consegna media (min)</th><th class="text-end">P95 (min)</th><th class="text-end">Reclami</th></tr>
                         </thead>
                         <tbody>
-                            @foreach (var category in lastRun.Summary.Categories)
+                            @foreach (var pizza in _lastRun.Summary.Pizzas)
                             {
                                 <tr>
-                                    <td>@category.Category</td>
-                                    <td class="text-end">@category.Tickets.ToString("N0")</td>
-                                    <td class="text-end">@category.AverageHours</td>
-                                    <td class="text-end">@category.P95Hours</td>
-                                    <td class="text-end">@category.Reopened.ToString("N0")</td>
+                                    <td>🍕 @pizza.Pizza</td>
+                                    <td class="text-end">@pizza.Orders.ToString("N0")</td>
+                                    <td class="text-end">@pizza.AverageMinutes</td>
+                                    <td class="text-end">@pizza.P95Minutes</td>
+                                    <td class="text-end">@pizza.Complaints.ToString("N0")</td>
                                 </tr>
                             }
                         </tbody>
@@ -104,7 +104,7 @@
 
 <ObserveBox>
     <ol class="mb-2">
-        <li>Premi <em>Analizza sul thread della UI</em>: la pallina e l'orologio si fermano e non puoi scrivere nel campo di testo finché il calcolo non termina.</li>
+        <li>Premi <em>Analizza sul thread della UI</em>: la pizza smette di girare, l'orologio si ferma e non puoi scrivere nel campo di testo finché il calcolo non termina.</li>
         <li>Premi <em>Analizza nel Web Worker</em>: stesso codice C#, stesso risultato, ma la pagina resta fluida.</li>
         <li>Il worker parte una volta sola (<code>WebWorkerClient.CreateAsync</code>) e carica il suo runtime .NET: guarda lo stato "pronto".</li>
     </ol>

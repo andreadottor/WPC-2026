@@ -7,8 +7,8 @@
 
 <PageTitle>Demo 1 · Pausa e ripresa del circuito</PageTitle>
 
-<DemoHeader Number="1" Title="Rilascio di una nuova versione senza perdere lo stato">
-    Durante uno shutdown controllato il server chiede al browser di mettere in pausa il circuito.
+<DemoHeader Number="1" Title="Il forno si riavvia, il carrello resta lì">
+    Rilasciamo una nuova versione mentre i clienti ordinano: durante uno shutdown controllato il server chiede al browser di mettere in pausa il circuito.
     Lo stato marcato con <code>[PersistentState]</code> viaggia nel browser e torna al componente quando
     la nuova istanza riprende la sessione.
 </DemoHeader>
@@ -19,7 +19,7 @@
         <span class="fs-4">✅</span>
         <div>
             <strong>Stato ripristinato!</strong>
-            Il contatore e il ticket arrivano dal processo <code>@original</code> (@OriginalVersion);
+            Le pizze nel carrello e l'ordine arrivano dal processo <code>@original</code> (@OriginalVersion);
             ora sei sul processo <code>@Instance.ProcessId</code> (@Instance.Version).
         </div>
     </div>
@@ -28,26 +28,26 @@
 <div class="row g-4">
     <div class="col-lg-7">
         <div class="card mb-4">
-            <div class="card-header fw-semibold">Contatore <span class="badge text-bg-light border">[PersistentState]</span></div>
+            <div class="card-header fw-semibold">🛒 Pizze nel carrello <span class="badge text-bg-light border">[PersistentState]</span></div>
             <div class="card-body d-flex align-items-center gap-3">
                 <span class="display-5" data-testid="counter">@Count</span>
-                <button class="btn btn-primary" @onclick="() => Count++">Incrementa</button>
-                <button class="btn btn-outline-secondary" @onclick="() => Count = 0">Azzera</button>
+                <button class="btn btn-primary" @onclick="() => Count++">🍕 Aggiungi una pizza</button>
+                <button class="btn btn-outline-secondary" @onclick="() => Count = 0">Svuota il carrello</button>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header fw-semibold">Ticket in compilazione <span class="badge text-bg-light border">[PersistentState]</span></div>
+            <div class="card-header fw-semibold">Ordine in compilazione <span class="badge text-bg-light border">[PersistentState]</span></div>
             <div class="card-body">
                 <div class="mb-3">
-                    <label for="ticket-title" class="form-label">Titolo</label>
-                    <input id="ticket-title" class="form-control" @bind="Ticket!.Title" @bind:event="oninput"
-                           placeholder="Es. La stampante del 2° piano non risponde" />
+                    <label for="order-address" class="form-label">Indirizzo di consegna</label>
+                    <input id="order-address" class="form-control" @bind="Order!.Address" @bind:event="oninput"
+                           placeholder="Es. Via Roma 12, citofono Dottor" />
                 </div>
                 <div class="mb-3">
-                    <label for="ticket-description" class="form-label">Descrizione</label>
-                    <textarea id="ticket-description" class="form-control" rows="4" @bind="Ticket!.Description" @bind:event="oninput"
-                              placeholder="Scrivi qualcosa e poi lancia lo script di deploy..."></textarea>
+                    <label for="order-notes" class="form-label">Note per il pizzaiolo</label>
+                    <textarea id="order-notes" class="form-control" rows="4" @bind="Order!.Notes" @bind:event="oninput"
+                              placeholder="Ben cotta, doppia mozzarella e niente ananas. Poi lancia lo script di deploy..."></textarea>
                 </div>
                 <small class="text-body-secondary">
                     Il testo viene salvato nel componente a ogni tasto: nessun salvataggio esplicito.
@@ -59,7 +59,7 @@
     <div class="col-lg-5">
         <div class="card">
             <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
-                Istanza del server
+                🔥 Forno (istanza del server)
                 <button class="btn btn-sm btn-outline-secondary" @onclick="StateHasChanged">Aggiorna</button>
             </div>
             <div class="card-body">
@@ -73,7 +73,7 @@
                     <dt class="col-5">Connessione</dt>
                     <dd class="col-7" data-testid="connection">@(Connection.IsConnected ? "connesso (Interactive Server)" : "prerendering: interattività in avvio")</dd>
                     <dt class="col-5">Componente creato alle</dt>
-                    <dd class="col-7">@componentCreatedAt.ToString("HH:mm:ss") <small class="text-body-secondary d-block">campo non persistito: cambia a ogni ripresa</small></dd>
+                    <dd class="col-7">@_componentCreatedAt.ToString("HH:mm:ss") <small class="text-body-secondary d-block">campo non persistito: cambia a ogni ripresa</small></dd>
                     <dt class="col-5">Stato creato da</dt>
                     <dd class="col-7">PID @OriginalProcessId · @OriginalVersion</dd>
                 </dl>
@@ -111,7 +111,7 @@
         </div>
 
         <div class="card mt-4">
-            <div class="card-header fw-semibold">Simula il deploy</div>
+            <div class="card-header fw-semibold">Simula il deploy (riavvio del forno)</div>
             <div class="card-body">
                 <p class="mb-2">Da un terminale nella root del repository:</p>
                 <pre class="bg-body-tertiary p-2 rounded mb-2"><code>.\scripts\deploy-demo.ps1</code></pre>
@@ -126,10 +126,10 @@
 
 <ObserveBox>
     <ol class="mb-2">
-        <li>Incrementa il contatore e scrivi qualcosa nel ticket (prova anche con una seconda scheda e valori diversi).</li>
+        <li>Aggiungi qualche pizza al carrello e scrivi l'indirizzo e le note dell'ordine (prova anche con una seconda scheda e valori diversi).</li>
         <li>Lancia <code>scripts\deploy-demo.ps1</code>: il server chiama <code>RequestCircuitPauseAsync()</code> su ogni circuito e attende che si chiudano (nei log: <em>"Chiusura circuito"</em>).</li>
         <li>Il browser mostra "La sessione è stata messa in pausa dal server" e attende <code>/health</code>.</li>
-        <li>Al riavvio la sessione riprende da sola: contatore e testo sono identici, <strong>versione e PID sono cambiati</strong>.</li>
+        <li>Al riavvio la sessione riprende da sola: carrello e ordine sono identici, <strong>versione e PID sono cambiati</strong>.</li>
         <li>Premi <code>Blazor.pauseCircuit()</code>, poi <em>Riprendi</em>: lo stato torna, l'orario di creazione del componente cambia.</li>
         <li>Passa a un'altra scheda per più di @AutoPauseOptions.Value.HiddenDelay.TotalSeconds secondi e torna: AutoPause ha messo in pausa il circuito e lo riprende da solo.</li>
     </ol>

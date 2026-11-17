@@ -7,19 +7,19 @@ namespace Dottor.WPC2026.Web.Client.Pages.Demos;
 
 public partial class WebWorkerDemo
 {
-    private const string AnalyzeMethod = "Dottor.WPC2026.WebWorker.WorkerMethods.AnalyzeTickets";
+    private const string AnalyzeMethod = "Dottor.WPC2026.WebWorker.WorkerMethods.AnalyzeOrders";
 
-    private WebWorkerClient? worker;
-    private string workerStatus = "in attesa dell'interattività";
-    private int rows = 250_000;
-    private int generatedRows;
-    private string? csv;
-    private bool busy;
-    private string status = "pronto";
-    private RunResult? lastRun;
-    private CancellationTokenSource? cts;
-    private DateTime clock = DateTime.Now;
-    private readonly CancellationTokenSource disposed = new();
+    private WebWorkerClient? _worker;
+    private string _workerStatus = "in attesa dell'interattività";
+    private int _rows = 250_000;
+    private int _generatedRows;
+    private string? _csv;
+    private bool _busy;
+    private string _status = "pronto";
+    private RunResult? _lastRun;
+    private CancellationTokenSource? _cts;
+    private DateTime _clock = DateTime.Now;
+    private readonly CancellationTokenSource _disposed = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -30,17 +30,17 @@ public partial class WebWorkerDemo
 
         _ = RunClockAsync();
 
-        workerStatus = "avvio del runtime .NET nel worker...";
+        _workerStatus = "avvio del runtime .NET nel worker...";
         StateHasChanged();
         var stopwatch = Stopwatch.StartNew();
         try
         {
-            worker = await WebWorkerClient.CreateAsync(JS, cancellationToken: disposed.Token);
-            workerStatus = $"pronto in {stopwatch.ElapsedMilliseconds} ms";
+            _worker = await WebWorkerClient.CreateAsync(JS, cancellationToken: _disposed.Token);
+            _workerStatus = $"pronto in {stopwatch.ElapsedMilliseconds} ms";
         }
         catch (Exception ex) when (ex is InvalidOperationException or JSException)
         {
-            workerStatus = $"errore: {ex.Message}";
+            _workerStatus = $"errore: {ex.Message}";
         }
         StateHasChanged();
     }
@@ -50,9 +50,9 @@ public partial class WebWorkerDemo
         using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
         try
         {
-            while (await timer.WaitForNextTickAsync(disposed.Token))
+            while (await timer.WaitForNextTickAsync(_disposed.Token))
             {
-                clock = DateTime.Now;
+                _clock = DateTime.Now;
                 StateHasChanged();
             }
         }
@@ -63,72 +63,72 @@ public partial class WebWorkerDemo
 
     private async Task AnalyzeOnUiThread()
     {
-        await RunAsync(inWorker: false, data => Task.FromResult(TicketCsvAnalyzer.Analyze(data)));
+        await RunAsync(inWorker: false, data => Task.FromResult(OrderCsvAnalyzer.Analyze(data)));
     }
 
     private async Task AnalyzeInWorker()
     {
-        cts = new CancellationTokenSource();
+        _cts = new CancellationTokenSource();
         try
         {
             await RunAsync(inWorker: true, async data =>
             {
-                var json = await worker!.InvokeAsync<string>(AnalyzeMethod, [data], cancellationToken: cts.Token);
+                var json = await _worker!.InvokeAsync<string>(AnalyzeMethod, [data], cancellationToken: _cts.Token);
                 return JsonSerializer.Deserialize(json, WorkerJsonContext.Default.CsvSummary)!;
             });
         }
         finally
         {
-            cts.Dispose();
-            cts = null;
+            _cts.Dispose();
+            _cts = null;
         }
     }
 
     private async Task RunAsync(bool inWorker, Func<string, Task<CsvSummary>> analyze)
     {
-        busy = true;
-        if (csv is null || generatedRows != rows)
+        _busy = true;
+        if (_csv is null || _generatedRows != _rows)
         {
-            status = "generazione del CSV...";
+            _status = "stampa delle comande (generazione del CSV)...";
             await Task.Delay(50); // lascia al browser il tempo di disegnare lo stato
-            csv = TicketCsvAnalyzer.Generate(rows);
-            generatedRows = rows;
+            _csv = OrderCsvAnalyzer.Generate(_rows);
+            _generatedRows = _rows;
         }
 
-        status = inWorker ? "analisi nel Web Worker..." : "analisi sul thread della UI...";
+        _status = inWorker ? "analisi nel Web Worker..." : "analisi sul thread della UI...";
         await Task.Delay(50);
 
         var stopwatch = Stopwatch.StartNew();
         try
         {
-            var summary = await analyze(csv);
-            lastRun = new RunResult(summary, stopwatch.Elapsed.TotalMilliseconds, inWorker);
-            status = "completato";
+            var summary = await analyze(_csv);
+            _lastRun = new RunResult(summary, stopwatch.Elapsed.TotalMilliseconds, inWorker);
+            _status = "completato";
         }
         catch (OperationCanceledException)
         {
-            status = "attesa annullata (il worker termina comunque il calcolo in corso)";
+            _status = "attesa annullata (il worker termina comunque il calcolo in corso)";
         }
         catch (InvalidOperationException ex)
         {
-            status = $"errore: {ex.Message}";
+            _status = $"errore: {ex.Message}";
         }
         finally
         {
-            busy = false;
+            _busy = false;
         }
     }
 
-    private void Cancel() => cts?.Cancel();
+    private void Cancel() => _cts?.Cancel();
 
     public async ValueTask DisposeAsync()
     {
-        disposed.Cancel();
-        if (worker is not null)
+        _disposed.Cancel();
+        if (_worker is not null)
         {
-            await worker.DisposeAsync();
+            await _worker.DisposeAsync();
         }
-        disposed.Dispose();
+        _disposed.Dispose();
     }
 
     private sealed record RunResult(CsvSummary Summary, double TotalMs, bool InWorker);

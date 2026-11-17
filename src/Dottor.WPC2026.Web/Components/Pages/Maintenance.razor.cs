@@ -4,29 +4,29 @@ namespace Dottor.WPC2026.Web.Components.Pages;
 
 public partial class Maintenance
 {
-    private IReadOnlyList<ActiveCircuit> circuits = [];
-    private IReadOnlyList<DisconnectedCircuit> disconnected = [];
-    private bool confirming;
-    private bool stopRequested;
+    private IReadOnlyList<ActiveCircuit> _circuits = [];
+    private IReadOnlyList<DisconnectedCircuit> _disconnected = [];
+    private bool _confirming;
+    private bool _stopRequested;
 
     protected override void OnInitialized()
     {
-        circuits = Shutdown.ActiveCircuits;
-        disconnected = Shutdown.DisconnectedCircuits;
+        _circuits = Shutdown.ActiveCircuits;
+        _disconnected = Shutdown.DisconnectedCircuits;
         Shutdown.CircuitsChanged += OnCircuitsChanged;
     }
 
     private void OnCircuitsChanged() => _ = InvokeAsync(() =>
     {
-        circuits = Shutdown.ActiveCircuits;
-        disconnected = Shutdown.DisconnectedCircuits;
+        _circuits = Shutdown.ActiveCircuits;
+        _disconnected = Shutdown.DisconnectedCircuits;
         StateHasChanged();
     });
 
     private void StopApplication()
     {
-        confirming = false;
-        stopRequested = true;
+        _confirming = false;
+        _stopRequested = true;
         Logger.LogWarning("Arresto dell'applicazione richiesto dal pannello di manutenzione (circuito {CircuitId})", Connection.CircuitId);
         ThreadPool.QueueUserWorkItem(_ => Lifetime.StopApplication());
     }

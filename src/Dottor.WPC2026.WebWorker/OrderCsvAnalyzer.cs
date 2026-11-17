@@ -9,23 +9,23 @@ namespace Dottor.WPC2026.WebWorker;
 /// Elaborazione CPU-bound volutamente "pesante": la stessa funzione viene eseguita
 /// sul thread della UI oppure nel Web Worker, per confrontare la reattività della pagina.
 /// </summary>
-public static class TicketCsvAnalyzer
+public static class OrderCsvAnalyzer
 {
-    private static readonly string[] Categories = ["Hardware", "Software", "Rete", "Accessi", "Stampanti", "Email"];
-    private static readonly string[] Priorities = ["Bassa", "Media", "Alta", "Critica"];
+    private static readonly string[] Pizzas = ["Margherita", "Diavola", "Capricciosa", "Quattro formaggi", "Marinara", "Bufalina"];
+    private static readonly string[] Zones = ["Centro", "Stazione", "Fiera", "Periferia"];
 
     public static string Generate(int rows)
     {
         var random = new Random(2026);
         var builder = new StringBuilder(rows * 40);
-        builder.AppendLine("id;categoria;priorita;minuti_risoluzione;riaperto");
+        builder.AppendLine("id;pizza;zona;minuti_consegna;reclamo");
         for (var i = 1; i <= rows; i++)
         {
             builder.Append(i).Append(';')
-                   .Append(Categories[random.Next(Categories.Length)]).Append(';')
-                   .Append(Priorities[random.Next(Priorities.Length)]).Append(';')
-                   .Append(random.Next(5, 2_880)).Append(';')
-                   .Append(random.Next(10) == 0 ? "si" : "no").Append('\n');
+                   .Append(Pizzas[random.Next(Pizzas.Length)]).Append(';')
+                   .Append(Zones[random.Next(Zones.Length)]).Append(';')
+                   .Append(random.Next(10, 75)).Append(';')
+                   .Append(random.Next(20) == 0 ? "si" : "no").Append('\n');
         }
         return builder.ToString();
     }
@@ -33,50 +33,50 @@ public static class TicketCsvAnalyzer
     public static CsvSummary Analyze(string csv)
     {
         var stopwatch = Stopwatch.StartNew();
-        var minutesByCategory = new Dictionary<string, List<int>>();
-        var reopenedByCategory = new Dictionary<string, int>();
+        var minutesByPizza = new Dictionary<string, List<int>>();
+        var complaintsByPizza = new Dictionary<string, int>();
         var rows = 0;
 
         foreach (var line in csv.Split('\n', StringSplitOptions.RemoveEmptyEntries).Skip(1))
         {
             var fields = line.Split(';');
-            var category = fields[1];
+            var pizza = fields[1];
             var minutes = int.Parse(fields[3], CultureInfo.InvariantCulture);
 
-            if (!minutesByCategory.TryGetValue(category, out var values))
+            if (!minutesByPizza.TryGetValue(pizza, out var values))
             {
-                minutesByCategory[category] = values = [];
-                reopenedByCategory[category] = 0;
+                minutesByPizza[pizza] = values = [];
+                complaintsByPizza[pizza] = 0;
             }
             values.Add(minutes);
             if (fields[4] == "si")
             {
-                reopenedByCategory[category]++;
+                complaintsByPizza[pizza]++;
             }
             rows++;
         }
 
-        var summary = minutesByCategory
+        var summary = minutesByPizza
             .Select(pair =>
             {
                 var sorted = pair.Value.Order().ToArray();
-                return new CategorySummary(
+                return new PizzaSummary(
                     pair.Key,
                     sorted.Length,
-                    Math.Round(sorted.Average() / 60, 1),
-                    Math.Round(sorted[(int)(sorted.Length * 0.95)] / 60.0, 1),
-                    reopenedByCategory[pair.Key]);
+                    Math.Round(sorted.Average(), 1),
+                    sorted[(int)(sorted.Length * 0.95)],
+                    complaintsByPizza[pair.Key]);
             })
-            .OrderByDescending(c => c.Tickets)
+            .OrderByDescending(p => p.Orders)
             .ToList();
 
         return new CsvSummary(rows, summary, stopwatch.Elapsed.TotalMilliseconds);
     }
 }
 
-public sealed record CategorySummary(string Category, int Tickets, double AverageHours, double P95Hours, int Reopened);
+public sealed record PizzaSummary(string Pizza, int Orders, double AverageMinutes, int P95Minutes, int Complaints);
 
-public sealed record CsvSummary(int Rows, IReadOnlyList<CategorySummary> Categories, double ElapsedMs);
+public sealed record CsvSummary(int Rows, IReadOnlyList<PizzaSummary> Pizzas, double ElapsedMs);
 
 // Serializzazione generata a compile time: funziona anche con il trimming di WebAssembly.
 [JsonSerializable(typeof(CsvSummary))]

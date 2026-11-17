@@ -9,18 +9,18 @@ public partial class AgenticWorkspace
 {
     private static readonly string[] Suggestions =
     [
-        "Rendi la descrizione più tecnica",
-        "Aggiungi una sezione sulla sicurezza",
-        "Proponi un titolo alternativo",
+        "Rendi la descrizione più golosa",
+        "Aggiungi una sezione sugli allergeni",
+        "Proponi un nome più simpatico",
         "Migliora la chiarezza del testo",
-        "Riassumi il documento",
-        "Pubblica il documento"
+        "Riassumi la scheda",
+        "Aggiungi la pizza al menu a 9,50 €"
     ];
 
-    private IDisposable? stateRegistration;
-    private IDisposable? statusRegistration;
-    private DocumentState baseline = new();
-    private ConversationStatus lastStatus;
+    private IDisposable? _stateRegistration;
+    private IDisposable? _statusRegistration;
+    private DocumentState _baseline = new();
+    private ConversationStatus _lastStatus;
 
     [CascadingParameter]
     public AgentContext AgentContext { get; set; } = default!;
@@ -46,18 +46,18 @@ public partial class AgenticWorkspace
 
     protected override void OnInitialized()
     {
-        baseline = Document.Clone();
-        lastStatus = AgentContext.Status;
-        stateRegistration = Agent.State.OnChanged(() => _ = InvokeAsync(StateHasChanged));
-        statusRegistration = AgentContext.RegisterOnStatusChanged(status => _ = InvokeAsync(() =>
+        _baseline = Document.Clone();
+        _lastStatus = AgentContext.Status;
+        _stateRegistration = Agent.State.OnChanged(() => _ = InvokeAsync(StateHasChanged));
+        _statusRegistration = AgentContext.RegisterOnStatusChanged(status => _ = InvokeAsync(() =>
         {
             // Fotografa il documento all'inizio di ogni richiesta: è la base del diff.
-            if (status == ConversationStatus.Streaming && lastStatus is not (ConversationStatus.Streaming or ConversationStatus.AwaitingInput)
+            if (status == ConversationStatus.Streaming && _lastStatus is not (ConversationStatus.Streaming or ConversationStatus.AwaitingInput)
                 && !Agent.State.HasPendingPredictiveState)
             {
-                baseline = Document.Clone();
+                _baseline = Document.Clone();
             }
-            lastStatus = status;
+            _lastStatus = status;
             if (status == ConversationStatus.Error)
             {
                 Logger.LogError(AgentContext.Error, "Demo 10: errore durante il turno dell'agente");
@@ -72,7 +72,7 @@ public partial class AgenticWorkspace
 
     public void Dispose()
     {
-        stateRegistration?.Dispose();
-        statusRegistration?.Dispose();
+        _stateRegistration?.Dispose();
+        _statusRegistration?.Dispose();
     }
 }

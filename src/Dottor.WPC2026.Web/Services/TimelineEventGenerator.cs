@@ -2,21 +2,21 @@ using Dottor.WPC2026.Web.Models;
 
 namespace Dottor.WPC2026.Web.Services;
 
-/// <summary>Genera eventi con descrizioni di lunghezza molto diversa (altezze variabili).</summary>
+/// <summary>Genera il diario della pizzeria (cucina e rider) con descrizioni di lunghezza molto diversa (altezze variabili).</summary>
 public static class TimelineEventGenerator
 {
     private static readonly string[] Titles =
     [
-        "Deploy completato", "Utente autenticato", "Timeout database", "Cache invalidata",
-        "Ordine creato", "Pagamento rifiutato", "Job notturno avviato", "Certificato in scadenza",
-        "Memoria oltre soglia", "Nuovo commento", "Backup completato", "Errore di validazione"
+        "Forno a 450 °C", "Rider partito 🛵", "Mozzarella in esaurimento", "Impasto lievitato",
+        "Nuovo ordine", "Pagamento rifiutato", "Pizza consegnata", "Citofono che non risponde",
+        "Recensione a 5 stelle", "Rider sotto la pioggia", "Basilico finito", "🍍 Ananas rilevato"
     ];
 
     private const string LoremText =
-        "Il servizio ha registrato un'attività significativa durante l'elaborazione della richiesta. " +
-        "Sono stati coinvolti più componenti dell'infrastruttura e i dettagli sono stati salvati nel log applicativo. " +
-        "Il team operativo può consultare la traccia distribuita per analizzare tempi di risposta e dipendenze. " +
-        "Non sono richieste azioni immediate, ma è consigliato monitorare l'andamento nelle prossime ore. ";
+        "La cucina ha registrato un'attività significativa durante la preparazione dell'ordine. " +
+        "Sono stati coinvolti il banco impasti, il forno a legna e il reparto farciture, e i dettagli sono finiti sul blocchetto delle comande. " +
+        "Il pizzaiolo può consultare la comanda per analizzare tempi di cottura, ingredienti e il percorso del rider. " +
+        "Non sono richieste azioni immediate, ma è consigliato tenere d'occhio il forno nei prossimi minuti. ";
 
     public static List<TimelineEvent> Generate(int count)
     {

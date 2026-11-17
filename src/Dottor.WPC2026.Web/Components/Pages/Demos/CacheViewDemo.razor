@@ -7,22 +7,22 @@
 <PageTitle>Demo 4 · CacheView</PageTitle>
 
 <DemoHeader Number="4" Title="CacheView: cache dell'output di un sotto-albero in Static SSR">
-    Lo stesso report renderizzato due volte: una porzione viene ricalcolata a ogni richiesta, l'altra riusa
+    Lo stesso menu con le vendite del giorno renderizzato due volte: una porzione viene ricalcolata a ogni richiesta, l'altra riusa
     l'HTML generato da <code>&lt;CacheView&gt;</code>, senza istanziare né eseguire i componenti figli.
 </DemoHeader>
 
-<nav class="d-flex flex-wrap align-items-center gap-2 mb-3" aria-label="Categoria del report">
+<nav class="d-flex flex-wrap align-items-center gap-2 mb-3" aria-label="Sezione del menu">
     @foreach (var link in Links)
     {
         <a class="btn @(IsCurrent(link.Href) ? "btn-primary" : "btn-outline-primary")" href="@link.Href">@link.Label</a>
     }
-    <span class="ms-2">Richiesta servita alle <strong data-testid="request-time">@requestTime.ToString("HH:mm:ss.fff")</strong> (fuori dalla cache)</span>
+    <span class="ms-2">Richiesta servita alle <strong data-testid="request-time">@_requestTime.ToString("HH:mm:ss.fff")</strong> (fuori dalla cache)</span>
 </nav>
 
-@if (!CategoryReportService.IsKnown(Category))
+@if (!MenuService.IsKnown(Category))
 {
     <div class="alert alert-warning" data-testid="unknown-category">
-        Categoria <code>@Category</code> non prevista. Il report non viene renderizzato né messo in cache:
+        La sezione <code>@Category</code> non è nel menu (no, l'ananas non ha una sezione sua). Il menu non viene renderizzato né messo in cache:
         valori arbitrari nella query creerebbero una voce di cache per ciascun valore.
     </div>
 }
@@ -30,11 +30,11 @@ else
 {
     <div class="row row-cols-1 row-cols-lg-2 g-3">
         <div class="col">
-            <CategoryReportView Category="@Category" Portion="live" Heading="Senza cache (ricalcolato a ogni richiesta)" />
+            <MenuView Category="@Category" Portion="live" Heading="Senza cache (ricalcolato a ogni richiesta)" />
         </div>
         <div class="col">
             <CacheView VaryByQuery="category" ExpiresAfter="CacheDuration">
-                <CategoryReportView Category="@Category" Portion="cache" Heading="Dentro CacheView" ExpiresAfter="CacheDuration" />
+                <MenuView Category="@Category" Portion="cache" Heading="Dentro CacheView (già sfornato)" ExpiresAfter="CacheDuration" />
             </CacheView>
         </div>
     </div>
@@ -44,7 +44,7 @@ else
     <div class="card-header fw-semibold">Più <code>CacheView</code> nello stesso componente: <code>CacheKey</code></div>
     <div class="card-body">
         <div class="row row-cols-1 row-cols-md-2 g-3 mb-3">
-            @foreach (var category in CategoryReportService.Categories)
+            @foreach (var category in MenuService.Categories)
             {
                 <div class="col">
                     @* In un ciclo le istanze hanno lo stesso antenato: CacheKey le distingue. *@
@@ -66,9 +66,9 @@ else
 
 <ObserveBox>
     <ol class="mb-2">
-        <li>Ricarica la pagina: il report "Senza cache" aumenta il numero di generazione, quello dentro <code>CacheView</code> no (per 20 secondi).</li>
-        <li>Passa da <em>hardware</em> a <em>software</em>: <code>VaryByQuery="category"</code> crea una voce di cache per categoria.</li>
-        <li>Prova <em>software + utm</em>: il parametro <code>utm</code> non fa parte della chiave, quindi riusa la stessa voce.</li>
+        <li>Ricarica la pagina: il menu "Senza cache" aumenta il numero di generazione, quello dentro <code>CacheView</code> no (per 20 secondi).</li>
+        <li>Passa da <em>classiche</em> a <em>speciali</em>: <code>VaryByQuery="category"</code> crea una voce di cache per categoria.</li>
+        <li>Prova <em>speciali + utm</em>: il parametro <code>utm</code> non fa parte della chiave, quindi riusa la stessa voce.</li>
     </ol>
     <p class="small text-body-secondary mb-0">
         Funziona solo in Static SSR (non è una cache per componenti interattivi) e la cache è condivisa tra gli utenti:

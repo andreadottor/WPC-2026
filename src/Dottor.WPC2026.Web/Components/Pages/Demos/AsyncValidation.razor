@@ -14,25 +14,25 @@
 <div class="row g-4">
     <div class="col-lg-7">
         <div class="card">
-            <div class="card-header fw-semibold">Registrazione utente</div>
+            <div class="card-header fw-semibold">🍕 Iscrizione al Pizza Club (tessera fedeltà)</div>
             <div class="card-body">
-                <EditForm EditContext="editContext" OnValidSubmit="RegisterAsync" FormName="registration">
+                <EditForm EditContext="_editContext" OnValidSubmit="RegisterAsync" FormName="registration">
                     <DataAnnotationsValidator />
 
                     <div class="mb-3">
                         <label class="form-label" for="fullName">
-                            <DisplayName For="() => model.FullName" /> <span class="badge text-bg-light border">sincrona</span>
+                            <DisplayName For="() => _model.FullName" /> <span class="badge text-bg-light border">sincrona</span>
                         </label>
-                        <InputText id="fullName" class="form-control" @bind-Value="model.FullName" />
-                        <ValidationMessage For="() => model.FullName" />
+                        <InputText id="fullName" class="form-control" @bind-Value="_model.FullName" />
+                        <ValidationMessage For="() => _model.FullName" />
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label" for="email">
-                            <DisplayName For="() => model.Email" /> <span class="badge text-bg-warning">sincrona + asincrona</span>
+                            <DisplayName For="() => _model.Email" /> <span class="badge text-bg-warning">sincrona + asincrona</span>
                         </label>
                         <div class="input-group">
-                            <InputText id="email" class="form-control" @bind-Value="model.Email" placeholder="nome@example.com" />
+                            <InputText id="email" class="form-control" @bind-Value="_model.Email" placeholder="nome@example.com" />
                             <span class="input-group-text" style="min-width: 9.5rem" data-testid="email-status">
                                 @if (EmailPending)
                                 {
@@ -53,7 +53,7 @@
                                 }
                             </span>
                         </div>
-                        <ValidationMessage For="() => model.Email" />
+                        <ValidationMessage For="() => _model.Email" />
                         @if (EmailFaulted)
                         {
                             <div class="alert alert-danger py-2 mt-2 mb-0 small">
@@ -64,19 +64,19 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label" for="age">
-                            <DisplayName For="() => model.Age" /> <span class="badge text-bg-light border">sincrona</span>
+                        <label class="form-label" for="pizzas">
+                            <DisplayName For="() => _model.PizzasPerMonth" /> <span class="badge text-bg-light border">sincrona</span>
                         </label>
-                        <InputNumber id="age" class="form-control" @bind-Value="model.Age" />
-                        <ValidationMessage For="() => model.Age" />
+                        <InputNumber id="pizzas" class="form-control" @bind-Value="_model.PizzasPerMonth" />
+                        <ValidationMessage For="() => _model.PizzasPerMonth" />
                     </div>
 
-                    <button type="submit" class="btn btn-primary" disabled="@(EmailPending || isSubmitting)">
-                        @if (isSubmitting)
+                    <button type="submit" class="btn btn-primary" disabled="@(EmailPending || _isSubmitting)">
+                        @if (_isSubmitting)
                         {
                             <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
                         }
-                        Registrati
+                        Iscriviti al Club
                     </button>
                     @if (EmailPending)
                     {
@@ -84,9 +84,9 @@
                     }
                 </EditForm>
 
-                @if (registeredMessage is not null)
+                @if (_registeredMessage is not null)
                 {
-                    <div class="alert alert-success mt-3 mb-0" role="status" data-testid="success">@registeredMessage</div>
+                    <div class="alert alert-success mt-3 mb-0" role="status" data-testid="success">@_registeredMessage</div>
                 }
             </div>
         </div>
@@ -98,13 +98,13 @@
             <div class="card-body">
                 <dl class="row mb-0 diagnostics">
                     <dt class="col-7">IsValidationPending()</dt>
-                    <dd class="col-5">@editContext.IsValidationPending()</dd>
+                    <dd class="col-5">@_editContext.IsValidationPending()</dd>
                     <dt class="col-7">IsValidationPending(Email)</dt>
                     <dd class="col-5">@EmailPending</dd>
                     <dt class="col-7">IsValidationFaulted(Email)</dt>
                     <dd class="col-5">@EmailFaulted</dd>
                     <dt class="col-7">Messaggi di errore</dt>
-                    <dd class="col-5">@editContext.GetValidationMessages().Count()</dd>
+                    <dd class="col-5">@_editContext.GetValidationMessages().Count()</dd>
                 </dl>
             </div>
         </div>
@@ -112,11 +112,11 @@
         <div class="card mb-4">
             <div class="card-header fw-semibold">Registro della validazione</div>
             <ul class="list-group list-group-flush small" style="max-height: 260px; overflow-y: auto" data-testid="validation-log">
-                @if (log.Count == 0)
+                @if (_log.Count == 0)
                 {
                     <li class="list-group-item text-body-secondary">Modifica un campo per vedere gli eventi.</li>
                 }
-                @foreach (var entry in log)
+                @foreach (var entry in _log)
                 {
                     <li class="list-group-item"><span class="text-body-secondary">@entry.Time.ToString("HH:mm:ss.fff")</span> @entry.Text</li>
                 }
@@ -124,7 +124,7 @@
         </div>
 
         <div class="card">
-            <div class="card-header fw-semibold">Email già registrate</div>
+            <div class="card-header fw-semibold">Email già nel Pizza Club</div>
             <ul class="list-group list-group-flush small">
                 @foreach (var email in Users.RegisteredEmails)
                 {
@@ -140,8 +140,8 @@
 
 <ObserveBox>
     <ol class="mb-2">
-        <li>Lascia vuoto il nome o metti un'età di 15: l'errore compare <strong>subito</strong> (regola sincrona).</li>
-        <li>Scrivi <code>mario.rossi@example.com</code> ed esci dal campo: parte lo spinner per ~800 ms, poi l'errore "già registrato".</li>
+        <li>Lascia vuoto il nome o dichiara 45 pizze al mese: l'errore compare <strong>subito</strong> (regola sincrona).</li>
+        <li>Scrivi <code>mario.rossi@example.com</code> ed esci dal campo: parte lo spinner per ~800 ms, poi l'errore "ha già la tessera".</li>
         <li>Modifica di nuovo l'email prima che finisca: il controllo precedente viene <strong>annullato</strong> (vedi registro e log del server).</li>
         <li>Correggi in <code>nuovo@example.com</code>: compare "Disponibile" e il pulsante si riabilita.</li>
         <li>Prova <code>errore@example.com</code> per vedere lo stato <em>faulted</em>.</li>

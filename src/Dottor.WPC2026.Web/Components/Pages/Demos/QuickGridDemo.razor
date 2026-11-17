@@ -1,7 +1,7 @@
 @page "/demo/quickgrid"
 @rendermode InteractiveServer
 @implements IDisposable
-@inject TicketService Tickets
+@inject OrderService Orders
 @inject NavigationManager Navigation
 
 <PageTitle>Demo 8 · QuickGrid</PageTitle>
@@ -15,35 +15,35 @@
     <div class="card-body py-2">
         <label class="form-label small mb-1" for="current-url">URL corrente (copiala e aprila in un'altra scheda)</label>
         <div class="input-group input-group-sm">
-            <input id="current-url" class="form-control font-monospace" readonly value="@currentUrl" data-testid="current-url" />
-            <a class="btn btn-outline-primary" href="@currentUrl" target="_blank">Apri in una nuova scheda ↗</a>
+            <input id="current-url" class="form-control font-monospace" readonly value="@_currentUrl" data-testid="current-url" />
+            <a class="btn btn-outline-primary" href="@_currentUrl" target="_blank">Apri in una nuova scheda ↗</a>
         </div>
     </div>
 </div>
 
 <div class="quickgrid-container table-responsive" data-testid="grid">
-    <QuickGrid Items="tickets" Pagination="pagination" OnRowClick="@((Ticket t) => OpenTicket(t))" Class="table table-sm mb-0">
-        <PropertyColumn Property="t => t.Id" Title="N." Sortable="true" Align="Align.End" />
-        <PropertyColumn Property="t => t.Title" Title="Titolo" Sortable="true" />
-        <TemplateColumn Title="Priorità" SortBy="sortByPriority">
-            <span class="badge @PriorityClass(context.Priority)">@context.Priority.ToDisplayName()</span>
+    <QuickGrid Items="_orders" Pagination="_pagination" OnRowClick="@((Order o) => OpenOrder(o))" Class="table table-sm mb-0">
+        <PropertyColumn Property="o => o.Id" Title="N." Sortable="true" Align="Align.End" />
+        <TemplateColumn Title="Pizza" SortBy="_sortByPizza">🍕 @context.Pizza</TemplateColumn>
+        <TemplateColumn Title="Fame" SortBy="_sortByHunger">
+            <span class="badge @HungerClass(context.Hunger)">@context.Hunger.ToDisplayName()</span>
         </TemplateColumn>
-        <TemplateColumn Title="Stato" SortBy="sortByStatus">
-            @context.Status.ToDisplayName()
+        <TemplateColumn Title="Stato" SortBy="_sortByStatus">
+            @StatusIcon(context.Status) @context.Status.ToDisplayName()
         </TemplateColumn>
-        <PropertyColumn Property="t => t.CreatedAt" Title="Creato il" Format="dd/MM/yyyy HH:mm" Sortable="true"
+        <PropertyColumn Property="o => o.CreatedAt" Title="Ordinato il" Format="dd/MM/yyyy HH:mm" Sortable="true"
                         IsDefaultSortColumn="true" InitialSortDirection="SortDirection.Descending" />
-        <PropertyColumn Property="t => t.AssignedTo" Title="Assegnato a" Sortable="true" />
+        <PropertyColumn Property="o => o.Rider" Title="Rider" Sortable="true" />
     </QuickGrid>
 </div>
-<Paginator State="pagination" />
+<Paginator State="_pagination" />
 
 <ObserveBox>
     <ol class="mb-2">
-        <li>Vai alla pagina 3 e ordina per <em>Priorità</em>: la URL diventa <code>?page=…&amp;sort=Priorità&amp;direction=…</code>.</li>
+        <li>Vai alla pagina 3 e ordina per <em>Fame</em>: la URL diventa <code>?page=…&amp;sort=Fame&amp;direction=…</code>.</li>
         <li>Usa i pulsanti Indietro/Avanti del browser: la griglia segue la URL.</li>
         <li>Apri la URL in un'altra scheda: stessa pagina, stesso ordinamento.</li>
-        <li>Clicca una riga: <code>OnRowClick</code> apre il dettaglio; il link di ritorno riporta alla stessa vista.</li>
+        <li>Clicca una riga: <code>OnRowClick</code> apre il dettaglio dell'ordine; il link di ritorno riporta alla stessa vista.</li>
     </ol>
     <p class="small text-body-secondary mb-0">
         Il parametro <code>sort</code> usa il <code>Title</code> della colonna: rinominarlo rompe i link salvati.

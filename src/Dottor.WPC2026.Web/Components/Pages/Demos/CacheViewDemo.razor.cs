@@ -7,12 +7,12 @@ public partial class CacheViewDemo
     private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(20);
     private static readonly (string Label, string Href)[] Links =
     [
-        ("hardware", "demo/cacheview?category=hardware"),
-        ("software", "demo/cacheview?category=software"),
-        ("software + utm", "demo/cacheview?category=software&utm=slide"),
+        ("classiche", "demo/cacheview?category=classiche"),
+        ("speciali", "demo/cacheview?category=speciali"),
+        ("speciali + utm", "demo/cacheview?category=speciali&utm=slide"),
     ];
 
-    private readonly DateTimeOffset requestTime = DateTimeOffset.Now;
+    private readonly DateTimeOffset _requestTime = DateTimeOffset.Now;
 
     [SupplyParameterFromQuery(Name = "category")]
     public string? Category { get; set; }
@@ -22,7 +22,7 @@ public partial class CacheViewDemo
         if (string.IsNullOrEmpty(Category))
         {
             // Un solo URL canonico per categoria mantiene prevedibili le chiavi di VaryByQuery.
-            Navigation.NavigateTo("demo/cacheview?category=hardware");
+            Navigation.NavigateTo("demo/cacheview?category=classiche");
         }
     }
 

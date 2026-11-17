@@ -31,8 +31,8 @@ builder.Services.AddSession();
 
 // Servizi in memoria usati dalle demo.
 builder.Services.AddSingleton<UserService>();
-builder.Services.AddSingleton<TicketService>();
-builder.Services.AddSingleton<CategoryReportService>();
+builder.Services.AddSingleton<OrderService>();
+builder.Services.AddSingleton<MenuService>();
 
 // Demo 9 e 10: IChatClient (Microsoft.Extensions.AI) su Microsoft Foundry: sezione "AI" + chiave nei User Secrets.
 builder.Services.AddFoundryChatClient(builder.Configuration);

@@ -1,0 +1,39 @@
+@page "/demo/quickgrid/{Id:int}"
+@inject OrderService Orders
+
+<PageTitle>Ordine #@Id</PageTitle>
+
+<a class="btn btn-sm btn-outline-secondary mb-3" href="@BackUrl">← Torna agli ordini</a>
+
+@if (_order is null)
+{
+    <div class="alert alert-warning">L'ordine #@Id non esiste (o il rider l'ha già mangiato 🤔).</div>
+}
+else
+{
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h1 class="h4 mb-0">🍕 Ordine #@_order.Id · @_order.Pizza</h1>
+            <RenderModeBadge />
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Consegna a</dt>
+                <dd class="col-sm-9">@_order.Address</dd>
+                <dt class="col-sm-3">Fame</dt>
+                <dd class="col-sm-9">@_order.Hunger.ToDisplayName()</dd>
+                <dt class="col-sm-3">Stato</dt>
+                <dd class="col-sm-9">@_order.Status.ToDisplayName()</dd>
+                <dt class="col-sm-3">Ordinato il</dt>
+                <dd class="col-sm-9">@_order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+                <dt class="col-sm-3">Rider</dt>
+                <dd class="col-sm-9">🛵 @_order.Rider</dd>
+                @if (_order.CustomerEmail is not null)
+                {
+                    <dt class="col-sm-3">Cliente</dt>
+                    <dd class="col-sm-9">@_order.CustomerEmail</dd>
+                }
+            </dl>
+        </div>
+    </div>
+}
