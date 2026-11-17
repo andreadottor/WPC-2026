@@ -8,8 +8,9 @@ public partial class Error
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
 
-    [PersistentState]
-    public string? RequestId { get; set; }
+    // Il template .NET 11 usa [PersistentState], ma su questa pagina statica (nessun render mode)
+    // la persistenza dello stato fallisce con un 500: qui non c'è nulla da trasferire al client.
+    private string? RequestId { get; set; }
 
     private bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
 
