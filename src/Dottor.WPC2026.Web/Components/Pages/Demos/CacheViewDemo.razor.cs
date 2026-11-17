@@ -12,7 +12,7 @@ public partial class CacheViewDemo
         ("speciali + utm", "demo/cacheview?category=speciali&utm=slide"),
     ];
 
-    private readonly DateTimeOffset requestTime = DateTimeOffset.Now;
+    private readonly DateTimeOffset _requestTime = DateTimeOffset.Now;
 
     [SupplyParameterFromQuery(Name = "category")]
     public string? Category { get; set; }

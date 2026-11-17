@@ -6,23 +6,23 @@ namespace Dottor.WPC2026.Web.Components.Pages.Demos;
 
 public partial class QuickGridDemo
 {
-    private IQueryable<Order> orders = default!;
-    private readonly PaginationState pagination = new() { ItemsPerPage = 15 };
-    private readonly GridSort<Order> sortByPizza = GridSort<Order>.ByAscending(o => o.Pizza);
-    private readonly GridSort<Order> sortByHunger = GridSort<Order>.ByAscending(o => o.Hunger);
-    private readonly GridSort<Order> sortByStatus = GridSort<Order>.ByAscending(o => o.Status);
-    private string currentUrl = "";
+    private IQueryable<Order> _orders = default!;
+    private readonly PaginationState _pagination = new() { ItemsPerPage = 15 };
+    private readonly GridSort<Order> _sortByPizza = GridSort<Order>.ByAscending(o => o.Pizza);
+    private readonly GridSort<Order> _sortByHunger = GridSort<Order>.ByAscending(o => o.Hunger);
+    private readonly GridSort<Order> _sortByStatus = GridSort<Order>.ByAscending(o => o.Status);
+    private string _currentUrl = "";
 
     protected override void OnInitialized()
     {
-        orders = Orders.GetAll();
-        currentUrl = Navigation.Uri;
+        _orders = Orders.GetAll();
+        _currentUrl = Navigation.Uri;
         Navigation.LocationChanged += OnLocationChanged;
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        currentUrl = e.Location;
+        _currentUrl = e.Location;
         InvokeAsync(StateHasChanged);
     }
 

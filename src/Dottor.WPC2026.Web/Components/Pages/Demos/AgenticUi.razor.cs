@@ -9,17 +9,17 @@ namespace Dottor.WPC2026.Web.Components.Pages.Demos;
 
 public partial class AgenticUi
 {
-    private UIAgent<DocumentState> agent = default!;
-    private IChatClient documentClient = default!;
-    private string? publishedInfo;
+    private UIAgent<DocumentState> _agent = default!;
+    private IChatClient _documentClient = default!;
+    private string? _publishedInfo;
 
     protected override void OnInitialized()
     {
-        documentClient = new DocumentContextChatClient(ChatClient, () => agent.State.Value);
-        agent = CreateAgent();
+        _documentClient = new DocumentContextChatClient(ChatClient, () => _agent.State.Value);
+        _agent = CreateAgent();
     }
 
-    private UIAgent<DocumentState> CreateAgent() => new(documentClient, options =>
+    private UIAgent<DocumentState> CreateAgent() => new(_documentClient, options =>
     {
         options.ChatOptions = new ChatOptions
         {
@@ -60,24 +60,24 @@ public partial class AgenticUi
     private string ReviewProposal([Description("Scheda della pizza completa e aggiornata")] DocumentState document, bool? accepted = null)
     {
         var isAccepted = accepted ?? throw new InvalidOperationException("La proposta non è ancora stata valutata dall'utente.");
-        if (!agent.State.HasPendingPredictiveState)
+        if (!_agent.State.HasPendingPredictiveState)
         {
             throw new InvalidOperationException("La proposta non è più in attesa.");
         }
 
         if (isAccepted)
         {
-            agent.State.AcceptPredictiveState();
+            _agent.State.AcceptPredictiveState();
             return "ACCEPTED: l'utente ha accettato la proposta, ora la scheda è aggiornata. Richiesta conclusa: conferma brevemente senza chiamare altri tool.";
         }
 
-        agent.State.RejectPredictiveState();
+        _agent.State.RejectPredictiveState();
         return "REJECTED: l'utente ha rifiutato la proposta, la scheda è invariata. Conferma brevemente senza proporre altro.";
     }
 
     private DocumentAnalysis AnalyzeDocument()
     {
-        var document = agent.State.Value;
+        var document = _agent.State.Value;
         var text = string.Join(' ', [document.Title, document.Description, .. document.Sections.SelectMany(s => new[] { s.Heading, s.Body })]);
         var words = text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
         return new DocumentAnalysis
@@ -91,9 +91,9 @@ public partial class AgenticUi
 
     private string PublishDocument([Description("Prezzo di vendita in euro, es. 9,50")] string price)
     {
-        publishedInfo = $"🍕 \"{agent.State.Value.Title}\" aggiunta al menu a {price} € alle {DateTime.Now:HH:mm:ss}";
+        _publishedInfo = $"🍕 \"{_agent.State.Value.Title}\" aggiunta al menu a {price} € alle {DateTime.Now:HH:mm:ss}";
         _ = InvokeAsync(StateHasChanged);
-        return publishedInfo + ".";
+        return _publishedInfo + ".";
     }
 
     private static DocumentState? ReadDocument(object? value) => value switch
@@ -107,11 +107,11 @@ public partial class AgenticUi
 
     private void Reset()
     {
-        var previous = agent;
-        publishedInfo = null;
-        agent = CreateAgent();
+        var previous = _agent;
+        _publishedInfo = null;
+        _agent = CreateAgent();
         previous.Dispose();
     }
 
-    public void Dispose() => agent?.Dispose();
+    public void Dispose() => _agent?.Dispose();
 }

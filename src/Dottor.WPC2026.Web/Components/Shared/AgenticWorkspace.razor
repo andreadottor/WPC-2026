@@ -22,11 +22,11 @@
             @if (Agent.State.HasPendingPredictiveState)
             {
                 <div class="diff" data-testid="diff">
-                    <h2 class="h4"><DiffText OldText="@baseline.Title" NewText="@Document.Title" /></h2>
-                                        <p class="lead fs-6"><DiffText OldText="@baseline.Description" NewText="@Document.Description" /></p>
-                    @for (var i = 0; i < Math.Max(Document.Sections.Count, baseline.Sections.Count); i++)
+                    <h2 class="h4"><DiffText OldText="@_baseline.Title" NewText="@Document.Title" /></h2>
+                                        <p class="lead fs-6"><DiffText OldText="@_baseline.Description" NewText="@Document.Description" /></p>
+                    @for (var i = 0; i < Math.Max(Document.Sections.Count, _baseline.Sections.Count); i++)
                     {
-                        var oldSection = i < baseline.Sections.Count ? baseline.Sections[i] : null;
+                        var oldSection = i < _baseline.Sections.Count ? _baseline.Sections[i] : null;
                         var newSection = i < Document.Sections.Count ? Document.Sections[i] : null;
                         <h3 class="h6 mt-3"><DiffText OldText="@oldSection?.Heading" NewText="@newSection?.Heading" /></h3>
                                                 <p class="mb-0"><DiffText OldText="@oldSection?.Body" NewText="@newSection?.Body" /></p>

@@ -12,11 +12,11 @@
     Dopo l'invio, <code>[SupplyParameterFromTempData]</code> e <code>[SupplyParameterFromSession]</code> portano i dati oltre il redirect.
 </DemoHeader>
 
-@if (flashMessage is not null)
+@if (_flashMessage is not null)
 {
     <div class="alert alert-success" role="status" data-testid="flash">
-        @flashMessage
-        @if (flashOrderId is int id)
+        @_flashMessage
+        @if (_flashOrderId is int id)
         {
             <a class="alert-link ms-1" href="demo/quickgrid/@id">Segui l'ordine 🛵</a>
         }
@@ -87,7 +87,7 @@
                     <dt class="col-6">Metodo HTTP</dt>
                     <dd class="col-6">@HttpContext?.Request.Method</dd>
                     <dt class="col-6">POST ricevuti dal server</dt>
-                    <dd class="col-6" data-testid="post-count">@postCount</dd>
+                    <dd class="col-6" data-testid="post-count">@_postCount</dd>
                     <dt class="col-6">Ordini totali</dt>
                     <dd class="col-6">@Orders.GetAll().Count()</dd>
                 </dl>
@@ -97,14 +97,14 @@
         <div class="card mt-4">
             <div class="card-header fw-semibold">I tuoi ordini in questa sessione <span class="badge text-bg-light border">Session</span></div>
             <div class="card-body">
-                @if (sessionOrders.Count == 0)
+                @if (_sessionOrders.Count == 0)
                 {
                     <p class="text-body-secondary mb-0" data-testid="session-empty">Ancora nessuna pizza ordinata: com'è possibile?</p>
                 }
                 else
                 {
                     <ul class="mb-0" data-testid="session-orders">
-                        @foreach (var order in sessionOrders)
+                        @foreach (var order in _sessionOrders)
                         {
                             <li><a href="demo/quickgrid/@order.Id">#@order.Id</a> 🍕 @order.Pizza</li>
                         }

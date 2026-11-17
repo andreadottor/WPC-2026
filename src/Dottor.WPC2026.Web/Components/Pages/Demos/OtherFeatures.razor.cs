@@ -5,8 +5,8 @@ namespace Dottor.WPC2026.Web.Components.Pages.Demos;
 
 public partial class OtherFeatures
 {
-    private readonly NewOrderModel sample = new();
-    private BrowserOptions? browserOptions;
+    private readonly NewOrderModel _sample = new();
+    private BrowserOptions? _browserOptions;
 
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
@@ -15,7 +15,7 @@ public partial class OtherFeatures
     {
         if (HttpContext is not null)
         {
-            browserOptions = BrowserOptions.GetBrowserOptions(HttpContext);
+            _browserOptions = BrowserOptions.GetBrowserOptions(HttpContext);
         }
     }
 }

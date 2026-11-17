@@ -5,7 +5,7 @@ namespace Dottor.WPC2026.Web.Components.Pages.Demos;
 
 public partial class CircuitPause
 {
-    private readonly DateTimeOffset componentCreatedAt = DateTimeOffset.Now;
+    private readonly DateTimeOffset _componentCreatedAt = DateTimeOffset.Now;
 
     [PersistentState]
     public int Count { get; set; }

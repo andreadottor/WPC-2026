@@ -3,27 +3,27 @@
 <section class="card h-100" id="@($"report-{Portion}")">
     <div class="card-body">
         <h2 class="h5">@Heading</h2>
-        @if (report is not null)
+        @if (_report is not null)
         {
             <dl class="row diagnostics mb-3">
-                <dt class="col-sm-5">Categoria</dt><dd class="col-sm-7" data-field="category">@report.Category</dd>
-                <dt class="col-sm-5">Sfornato alle</dt><dd class="col-sm-7" data-field="generated-at">@report.GeneratedAt.ToString("HH:mm:ss.fff")</dd>
-                <dt class="col-sm-5">Generazione n.</dt><dd class="col-sm-7" data-field="generation"><strong>@report.Generation</strong></dd>
+                <dt class="col-sm-5">Categoria</dt><dd class="col-sm-7" data-field="category">@_report.Category</dd>
+                <dt class="col-sm-5">Sfornato alle</dt><dd class="col-sm-7" data-field="generated-at">@_report.GeneratedAt.ToString("HH:mm:ss.fff")</dd>
+                <dt class="col-sm-5">Generazione n.</dt><dd class="col-sm-7" data-field="generation"><strong>@_report.Generation</strong></dd>
                 @if (ExpiresAfter is { } expiresAfter)
                 {
                     <dt class="col-sm-5">Scadenza stimata</dt>
-                    <dd class="col-sm-7" data-field="expires">~@report.GeneratedAt.Add(expiresAfter).ToString("HH:mm:ss") (@expiresAfter.TotalSeconds s)</dd>
+                    <dd class="col-sm-7" data-field="expires">~@_report.GeneratedAt.Add(expiresAfter).ToString("HH:mm:ss") (@expiresAfter.TotalSeconds s)</dd>
                 }
             </dl>
             <table class="table table-sm">
                 <thead><tr><th scope="col">Pizza</th><th scope="col" class="text-end">Sfornate</th><th scope="col" class="text-end">Incasso</th></tr></thead>
                 <tbody>
-                    @foreach (var row in report.Rows)
+                    @foreach (var row in _report.Rows)
                     {
                         <tr><td>🍕 @row.Product</td><td class="text-end">@row.Units</td><td class="text-end">@row.Revenue.ToString("C0", Italian)</td></tr>
                     }
                 </tbody>
-                <tfoot><tr><th scope="row" colspan="2">Totale</th><th class="text-end">@report.Total.ToString("C0", Italian)</th></tr></tfoot>
+                <tfoot><tr><th scope="row" colspan="2">Totale</th><th class="text-end">@_report.Total.ToString("C0", Italian)</th></tr></tfoot>
             </table>
         }
     </div>

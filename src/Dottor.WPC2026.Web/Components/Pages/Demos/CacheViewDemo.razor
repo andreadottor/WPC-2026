@@ -16,7 +16,7 @@
     {
         <a class="btn @(IsCurrent(link.Href) ? "btn-primary" : "btn-outline-primary")" href="@link.Href">@link.Label</a>
     }
-    <span class="ms-2">Richiesta servita alle <strong data-testid="request-time">@requestTime.ToString("HH:mm:ss.fff")</strong> (fuori dalla cache)</span>
+    <span class="ms-2">Richiesta servita alle <strong data-testid="request-time">@_requestTime.ToString("HH:mm:ss.fff")</strong> (fuori dalla cache)</span>
 </nav>
 
 @if (!MenuService.IsKnown(Category))

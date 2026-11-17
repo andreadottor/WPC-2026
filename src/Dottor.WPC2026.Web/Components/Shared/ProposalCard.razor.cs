@@ -5,9 +5,9 @@ namespace Dottor.WPC2026.Web.Components.Shared;
 
 public partial class ProposalCard
 {
-    private bool busy;
-    private bool answered;
-    private bool accepted;
+    private bool _busy;
+    private bool _answered;
+    private bool _accepted;
 
     [Parameter, EditorRequired]
     public UIActionBlock Block { get; set; } = default!;
@@ -16,29 +16,29 @@ public partial class ProposalCard
     {
         if (Block.IsComplete && Block.Result?.Result is { } result)
         {
-            accepted = result.ToString()?.Contains("ACCEPTED", StringComparison.Ordinal) == true;
+            _accepted = result.ToString()?.Contains("ACCEPTED", StringComparison.Ordinal) == true;
         }
     }
 
     private async Task RespondAsync(bool accept)
     {
-        if (busy || answered)
+        if (_busy || _answered)
         {
             return;
         }
 
-        busy = true;
+        _busy = true;
         try
         {
             Block.Call.Arguments ??= new Dictionary<string, object?>();
             Block.Call.Arguments["accepted"] = accept;
-            accepted = accept;
-            answered = true;
+            _accepted = accept;
+            _answered = true;
             await Block.InvokeAsync(CancellationToken.None);
         }
         finally
         {
-            busy = false;
+            _busy = false;
         }
     }
 }

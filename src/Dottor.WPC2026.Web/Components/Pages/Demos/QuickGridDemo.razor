@@ -15,20 +15,20 @@
     <div class="card-body py-2">
         <label class="form-label small mb-1" for="current-url">URL corrente (copiala e aprila in un'altra scheda)</label>
         <div class="input-group input-group-sm">
-            <input id="current-url" class="form-control font-monospace" readonly value="@currentUrl" data-testid="current-url" />
-            <a class="btn btn-outline-primary" href="@currentUrl" target="_blank">Apri in una nuova scheda ↗</a>
+            <input id="current-url" class="form-control font-monospace" readonly value="@_currentUrl" data-testid="current-url" />
+            <a class="btn btn-outline-primary" href="@_currentUrl" target="_blank">Apri in una nuova scheda ↗</a>
         </div>
     </div>
 </div>
 
 <div class="quickgrid-container table-responsive" data-testid="grid">
-    <QuickGrid Items="orders" Pagination="pagination" OnRowClick="@((Order o) => OpenOrder(o))" Class="table table-sm mb-0">
+    <QuickGrid Items="_orders" Pagination="_pagination" OnRowClick="@((Order o) => OpenOrder(o))" Class="table table-sm mb-0">
         <PropertyColumn Property="o => o.Id" Title="N." Sortable="true" Align="Align.End" />
-        <TemplateColumn Title="Pizza" SortBy="sortByPizza">🍕 @context.Pizza</TemplateColumn>
-        <TemplateColumn Title="Fame" SortBy="sortByHunger">
+        <TemplateColumn Title="Pizza" SortBy="_sortByPizza">🍕 @context.Pizza</TemplateColumn>
+        <TemplateColumn Title="Fame" SortBy="_sortByHunger">
             <span class="badge @HungerClass(context.Hunger)">@context.Hunger.ToDisplayName()</span>
         </TemplateColumn>
-        <TemplateColumn Title="Stato" SortBy="sortByStatus">
+        <TemplateColumn Title="Stato" SortBy="_sortByStatus">
             @StatusIcon(context.Status) @context.Status.ToDisplayName()
         </TemplateColumn>
         <PropertyColumn Property="o => o.CreatedAt" Title="Ordinato il" Format="dd/MM/yyyy HH:mm" Sortable="true"
@@ -36,7 +36,7 @@
         <PropertyColumn Property="o => o.Rider" Title="Rider" Sortable="true" />
     </QuickGrid>
 </div>
-<Paginator State="pagination" />
+<Paginator State="_pagination" />
 
 <ObserveBox>
     <ol class="mb-2">

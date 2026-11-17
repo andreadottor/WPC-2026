@@ -28,7 +28,7 @@ public sealed class MenuService
             ("Hawaiana 🍍 (su richiesta scritta)", 3, 15m),
         ],
     };
-    private readonly ConcurrentDictionary<string, int> generations = new();
+    private readonly ConcurrentDictionary<string, int> _generations = new();
 
     public static bool IsKnown(string? category) => category is not null && Catalog.ContainsKey(category);
 
@@ -42,7 +42,7 @@ public sealed class MenuService
         // Simula una query costosa (il pizzaiolo che conta le pizze) senza bloccare un thread del pool.
         await Task.Delay(SimulatedWork, cancellationToken);
 
-        var generation = generations.AddOrUpdate($"{portion}:{category}", 1, (_, current) => current + 1);
+        var generation = _generations.AddOrUpdate($"{portion}:{category}", 1, (_, current) => current + 1);
         var rows = products.Select(p => new MenuRow(p.Product, p.Units, p.Units * p.UnitPrice)).ToArray();
         return new MenuReport(category, rows, DateTimeOffset.Now, generation);
     }

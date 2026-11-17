@@ -2,17 +2,17 @@
 <div class="card border-primary my-2" data-testid="proposal">
     <div class="card-body py-2">
         <div class="small text-uppercase text-primary-emphasis fw-semibold">Modifica proposta</div>
-        @if (Block.IsComplete || answered)
+        @if (Block.IsComplete || _answered)
         {
-            <span class="badge @(accepted ? "text-bg-success" : "text-bg-secondary")" data-testid="proposal-outcome">
-                @(accepted ? "Accettata" : "Rifiutata")
+            <span class="badge @(_accepted ? "text-bg-success" : "text-bg-secondary")" data-testid="proposal-outcome">
+                @(_accepted ? "Accettata" : "Rifiutata")
             </span>
         }
         else
         {
             <p class="mb-2">Applicare alla scheda le modifiche evidenziate?</p>
-            <button class="btn btn-sm btn-success me-1" disabled="@busy" @onclick="() => RespondAsync(true)" data-testid="accept">Accetta</button>
-            <button class="btn btn-sm btn-outline-danger" disabled="@busy" @onclick="() => RespondAsync(false)" data-testid="reject">Rifiuta</button>
+            <button class="btn btn-sm btn-success me-1" disabled="@_busy" @onclick="() => RespondAsync(true)" data-testid="accept">Accetta</button>
+            <button class="btn btn-sm btn-outline-danger" disabled="@_busy" @onclick="() => RespondAsync(false)" data-testid="reject">Rifiuta</button>
         }
     </div>
 </div>

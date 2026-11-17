@@ -5,7 +5,7 @@ namespace Dottor.WPC2026.Web.Components.Pages.Demos;
 
 public partial class OrderDetail
 {
-    private Order? order;
+    private Order? _order;
 
     [Parameter]
     public int Id { get; set; }
@@ -19,5 +19,5 @@ public partial class OrderDetail
             ? ReturnUrl
             : "demo/quickgrid";
 
-    protected override void OnParametersSet() => order = Orders.GetById(Id);
+    protected override void OnParametersSet() => _order = Orders.GetById(Id);
 }

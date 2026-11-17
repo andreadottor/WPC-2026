@@ -51,7 +51,7 @@
                     <dt class="col-6">Servizio avviato alle</dt>
                     <dd class="col-6" data-testid="service-started">@(Monitor.StartedAt?.ToString("HH:mm:ss") ?? "—")</dd>
                     <dt class="col-6">Componente creato alle</dt>
-                    <dd class="col-6">@componentCreatedAt.ToString("HH:mm:ss")</dd>
+                    <dd class="col-6">@_componentCreatedAt.ToString("HH:mm:ss")</dd>
                     <dt class="col-6">Renderer</dt>
                     <dd class="col-6">@RendererInfo.Name</dd>
                 </dl>

@@ -17,9 +17,9 @@
                 <table class="table table-sm mb-2">
                     <thead>
                         <tr>
-                            <th><DisplayName For="() => sample.Pizza" /></th>
-                            <th><DisplayName For="() => sample.Email" /></th>
-                            <th><DisplayName For="() => sample.Hunger" /></th>
+                            <th><DisplayName For="() => _sample.Pizza" /></th>
+                            <th><DisplayName For="() => _sample.Email" /></th>
+                            <th><DisplayName For="() => _sample.Hunger" /></th>
                         </tr>
                     </thead>
                 </table>
@@ -55,9 +55,9 @@ public string? Email { get; set; }
                 <p class="small">Opzioni lette con <code>BrowserOptions.GetBrowserOptions(HttpContext)</code> per questa richiesta:</p>
                 <dl class="row small mb-2" data-testid="browser-options">
                     <dt class="col-7">InteractiveServer.ReconnectionMaxRetries</dt>
-                    <dd class="col-5">@(browserOptions?.InteractiveServer.ReconnectionMaxRetries?.ToString() ?? "default")</dd>
+                    <dd class="col-5">@(_browserOptions?.InteractiveServer.ReconnectionMaxRetries?.ToString() ?? "default")</dd>
                     <dt class="col-7">InteractiveServer.ReconnectionRetryInterval</dt>
-                    <dd class="col-5">@(browserOptions?.InteractiveServer.ReconnectionRetryInterval?.ToString() ?? "default")</dd>
+                    <dd class="col-5">@(_browserOptions?.InteractiveServer.ReconnectionRetryInterval?.ToString() ?? "default")</dd>
                     <dt class="col-7">AddAutoPause (da configurazione)</dt>
                     <dd class="col-5">@(AutoPauseOptions.Value.Enabled ? $"dopo {AutoPauseOptions.Value.HiddenDelay.TotalSeconds} s" : "disattivata")</dd>
                 </dl>

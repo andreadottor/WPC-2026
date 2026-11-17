@@ -6,23 +6,23 @@ namespace Dottor.WPC2026.Web.Components.Pages.Demos;
 
 public partial class VirtualizeDemo
 {
-    private readonly List<TimelineEvent> events = TimelineEventGenerator.Generate(10_000);
-    private readonly HashSet<int> expanded = [];
-    private readonly Random random = new(2026);
-    private Virtualize<TimelineEvent>? timeline;
-    private VirtualizeAnchorMode anchorMode = VirtualizeAnchorMode.Start;
-    private int targetIndex = 5000;
-    private int? highlightedId;
-    private string? status;
-    private bool liveFeed;
-    private Timer? feedTimer;
+    private readonly List<TimelineEvent> _events = TimelineEventGenerator.Generate(10_000);
+    private readonly HashSet<int> _expanded = [];
+    private readonly Random _random = new(2026);
+    private Virtualize<TimelineEvent>? _timeline;
+    private VirtualizeAnchorMode _anchorMode = VirtualizeAnchorMode.Start;
+    private int _targetIndex = 5000;
+    private int? _highlightedId;
+    private string? _status;
+    private bool _liveFeed;
+    private Timer? _feedTimer;
 
-    private readonly List<LogLine> logLines = [];
-    private bool logRunning;
-    private Timer? logTimer;
-    private int logCounter;
+    private readonly List<LogLine> _logLines = [];
+    private bool _logRunning;
+    private Timer? _logTimer;
+    private int _logCounter;
 
-    private string anchorDescription => anchorMode switch
+    private string anchorDescription => _anchorMode switch
     {
         VirtualizeAnchorMode.Start => "Start (default): se la lista è all'inizio, i nuovi elementi in cima restano visibili.",
         VirtualizeAnchorMode.End => "End: se la lista è in fondo, resta agganciata alla fine quando arrivano nuovi elementi.",
@@ -39,77 +39,77 @@ public partial class VirtualizeDemo
 
     private void Toggle(int id)
     {
-        if (!expanded.Remove(id))
+        if (!_expanded.Remove(id))
         {
-            expanded.Add(id);
+            _expanded.Add(id);
         }
     }
 
     private Task ScrollToStart() => ScrollToIndexAsync(0);
 
-    private Task ScrollToEnd() => ScrollToIndexAsync(events.Count - 1);
+    private Task ScrollToEnd() => ScrollToIndexAsync(_events.Count - 1);
 
-    private Task ScrollToTarget() => ScrollToIndexAsync(Math.Clamp(targetIndex, 0, events.Count - 1));
+    private Task ScrollToTarget() => ScrollToIndexAsync(Math.Clamp(_targetIndex, 0, _events.Count - 1));
 
     private async Task ScrollToIndexAsync(int index)
     {
-        highlightedId = events[index].Id;
-        status = $"Scorrimento all'indice {index} (evento #{highlightedId})...";
+        _highlightedId = _events[index].Id;
+        _status = $"Scorrimento all'indice {index} (evento #{_highlightedId})...";
         StateHasChanged();
-        await timeline!.ScrollToItemAsync(index);
-        status = $"Elemento all'indice {index} (evento #{highlightedId}) allineato in cima.";
+        await _timeline!.ScrollToItemAsync(index);
+        _status = $"Elemento all'indice {index} (evento #{_highlightedId}) allineato in cima.";
     }
 
     private void AddAtTop()
     {
-        events.Insert(0, NewEvent());
-        status = $"Aggiunto l'evento #{events[0].Id} in cima.";
+        _events.Insert(0, NewEvent());
+        _status = $"Aggiunto l'evento #{_events[0].Id} in cima.";
     }
 
     private void AddAtBottom()
     {
-        events.Add(NewEvent());
-        status = $"Aggiunto l'evento #{events[^1].Id} in fondo.";
+        _events.Add(NewEvent());
+        _status = $"Aggiunto l'evento #{_events[^1].Id} in fondo.";
     }
 
     private TimelineEvent NewEvent() =>
-        TimelineEventGenerator.Create(events.Max(e => e.Id) + 1, DateTime.Now, random) with { Title = "Nuovo ordine in arrivo 🍕" };
+        TimelineEventGenerator.Create(_events.Max(e => e.Id) + 1, DateTime.Now, _random) with { Title = "Nuovo ordine in arrivo 🍕" };
 
     private void ToggleLiveFeed()
     {
-        liveFeed = !liveFeed;
-        feedTimer?.Dispose();
-        feedTimer = liveFeed
+        _liveFeed = !_liveFeed;
+        _feedTimer?.Dispose();
+        _feedTimer = _liveFeed
             ? new Timer(_ => InvokeAsync(() => { AddAtTop(); StateHasChanged(); }), null, 0, 1000)
             : null;
     }
 
     private void ToggleLog()
     {
-        logRunning = !logRunning;
-        logTimer?.Dispose();
-        logTimer = logRunning
+        _logRunning = !_logRunning;
+        _logTimer?.Dispose();
+        _logTimer = _logRunning
             ? new Timer(_ => InvokeAsync(() => { AppendLogLine(); StateHasChanged(); }), null, 0, 400)
             : null;
     }
 
     private void AppendLogLine()
     {
-        logCounter++;
-        var roll = random.Next(10);
+        _logCounter++;
+        var roll = _random.Next(10);
         var (level, text) = roll switch
         {
-            0 => ("error", $"ERR  Consegna {logCounter} in ritardo: RiderLostException\n     at Navigator.FindAddress()\n     at Delivery.Run()"),
-            1 or 2 => ("warn", $"WARN Consegna {logCounter}: traffico, +{random.Next(3, 15)} minuti"),
-            _ => ("info", $"INFO Consegna {logCounter} completata in {random.Next(8, 30)} minuti 🍕")
+            0 => ("error", $"ERR  Consegna {_logCounter} in ritardo: RiderLostException\n     at Navigator.FindAddress()\n     at Delivery.Run()"),
+            1 or 2 => ("warn", $"WARN Consegna {_logCounter}: traffico, +{_random.Next(3, 15)} minuti"),
+            _ => ("info", $"INFO Consegna {_logCounter} completata in {_random.Next(8, 30)} minuti 🍕")
         };
-        logLines.Add(new LogLine(logCounter, level, $"{DateTime.Now:HH:mm:ss.fff} {text}"));
+        _logLines.Add(new LogLine(_logCounter, level, $"{DateTime.Now:HH:mm:ss.fff} {text}"));
     }
 
     public void Dispose()
     {
-        feedTimer?.Dispose();
-        logTimer?.Dispose();
+        _feedTimer?.Dispose();
+        _logTimer?.Dispose();
     }
 
     private sealed record LogLine(int Id, string Level, string Text);

@@ -6,9 +6,9 @@ namespace Dottor.WPC2026.Web.Components.Pages.Demos;
 
 public partial class StaticSsrValidation
 {
-    private static int postCount;
-    private string? flashMessage;
-    private int? flashOrderId;
+    private static int _postCount;
+    private string? _flashMessage;
+    private int? _flashOrderId;
 
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
@@ -27,7 +27,7 @@ public partial class StaticSsrValidation
     [SupplyParameterFromSession(Name = "MyOrderIds")]
     public string? MyOrderIds { get; set; }
 
-    private List<Order> sessionOrders = [];
+    private List<Order> _sessionOrders = [];
 
     protected override void OnInitialized()
     {
@@ -35,10 +35,10 @@ public partial class StaticSsrValidation
 
         // Il valore della proprietà viene riscritto in TempData a fine richiesta:
         // lo copiamo e lo azzeriamo, così il messaggio compare una sola volta.
-        (flashMessage, flashOrderId) = (Message, CreatedOrderId);
+        (_flashMessage, _flashOrderId) = (Message, CreatedOrderId);
         (Message, CreatedOrderId) = (null, null);
 
-        sessionOrders = (MyOrderIds ?? "")
+        _sessionOrders = (MyOrderIds ?? "")
             .Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Select(id => int.TryParse(id, out var value) ? Orders.GetById(value) : null)
             .OfType<Order>()
@@ -46,7 +46,7 @@ public partial class StaticSsrValidation
 
         if (HttpMethods.IsPost(HttpContext?.Request.Method ?? ""))
         {
-            Interlocked.Increment(ref postCount);
+            Interlocked.Increment(ref _postCount);
         }
     }
 

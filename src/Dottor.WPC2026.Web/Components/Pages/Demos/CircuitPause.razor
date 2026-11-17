@@ -73,7 +73,7 @@
                     <dt class="col-5">Connessione</dt>
                     <dd class="col-7" data-testid="connection">@(Connection.IsConnected ? "connesso (Interactive Server)" : "prerendering: interattività in avvio")</dd>
                     <dt class="col-5">Componente creato alle</dt>
-                    <dd class="col-7">@componentCreatedAt.ToString("HH:mm:ss") <small class="text-body-secondary d-block">campo non persistito: cambia a ogni ripresa</small></dd>
+                    <dd class="col-7">@_componentCreatedAt.ToString("HH:mm:ss") <small class="text-body-secondary d-block">campo non persistito: cambia a ogni ripresa</small></dd>
                     <dt class="col-5">Stato creato da</dt>
                     <dd class="col-7">PID @OriginalProcessId · @OriginalVersion</dd>
                 </dl>
